@@ -30,3 +30,8 @@ build/
 ^venv/
 ^.*\.Rcheck$
 ^.*\.tar\.gz$
+^\.gdalcli_test\.json$
+^check_output\.txt$
+^.*\.Rproj$
+^test_output\.txt$
+^workflow\.gdalg\.json$

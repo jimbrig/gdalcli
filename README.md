@@ -283,7 +283,7 @@ cat(script)
 #> set -e
 #> 
 #> # Native GDAL pipeline execution
-#> gdal raster pipeline ! read /home/andrew/R/x86_64-pc-linux-gnu-library/4.5/gdalcli/extdata/sample_clay_content.tif ! reproject --dst-crs EPSG:32632 --output /vsimem/gdalcli_36adf3439ef86.tif ! write /tmp/RtmpwcIhIw/file36adf499ef31e.tif --input /vsimem/gdalcli_36adf3439ef86.tif
+#> gdal raster pipeline ! read /tmp/RtmpGY64LB/temp_libpath60f2f652ac9cd/gdalcli/extdata/sample_clay_content.tif ! reproject --dst-crs EPSG:32632 ! write /tmp/RtmpKx0AtF/file6101055684d8f.tif
 ```
 
 ## Architecture
@@ -312,6 +312,7 @@ Function arguments, descriptions, and much of the embedded documentation
 within `gdalcli` are derived directly from the official GDAL
 documentation.
 
-We gratefully acknowledge the GDAL development team and contributors.
+We gratefully acknowledge the GDAL/OGR development team and
+contributors.
 
 See the `LICENSE.md` file for the full GDAL license attribution.

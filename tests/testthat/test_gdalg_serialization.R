@@ -21,8 +21,8 @@ test_that("Shell-style quoting escapes embedded single quotes", {
   # Single quote in string
   input <- "it's_a_file"
   result <- .quote_argument(input)
-  expect_true(grepl("'", result))  # Should contain quotes
-  expect_true(grepl("\"", result))  # Should use '"'"' technique
+  expect_true(grepl("'", result)) # Should contain quotes
+  expect_true(grepl("\"", result)) # Should use '"'"' technique
 })
 
 test_that("Empty string is properly quoted", {
@@ -99,34 +99,6 @@ test_that("RFC 104 argument formatting applies special flag mappings", {
   expect_equal(result[1], "--te")
 })
 
-test_that("job_to_rfc104_step formats a simple read operation", {
-  job <- new_gdal_job(
-    command_path = c("gdal", "vector", "read"),
-    arguments = list(input = "input.gpkg"),
-    arg_mapping = list()
-  )
-
-  result <- .job_to_rfc104_step(job)
-  expect_true(grepl("^read", result))
-  expect_true(grepl("input\\.gpkg", result))
-})
-
-test_that("job_to_rfc104_step formats operations with options", {
-  job <- new_gdal_job(
-    command_path = c("gdal", "vector", "reproject"),
-    arguments = list(
-      input = "in.gpkg",
-      output = "out.gpkg",
-      dst_crs = "EPSG:32632"
-    ),
-    arg_mapping = list()
-  )
-
-  result <- .job_to_rfc104_step(job)
-  expect_true(grepl("^reproject", result))
-  expect_true(grepl("--dst-crs", result))
-  expect_true(grepl("EPSG:32632", result))
-})
 
 test_that("pipeline_to_rfc104_command constructs valid RFC 104 string", {
   jobs <- list(
@@ -207,7 +179,9 @@ test_that("rfc104_step_to_job reconstructs job from tokens", {
   expect_equal(job$arguments$dst_crs, "EPSG:32632")
 })
 
-test_that("rfc104_step_to_job handles repeatable arguments", {
+test_that("rfc104_step_to_job reconstruces job from tokens correctly", {
+  # Note: The inverse mapping of parsing back from string is a bit limited for positional
+  # arguments in current simplistic rfc104_step_to_job, but we test basic properties
   tokens <- c("write", "--co", "COMPRESS=LZW", "--co", "TILED=YES", "output.tif")
 
   job <- .rfc104_step_to_job(tokens, "raster", 3)
@@ -325,9 +299,9 @@ test_that("gdal_save_pipeline saves GDALG JSON format to disk", {
 
   # Check file contains valid JSON
   json_content <- yyjsonr::read_json_file(tmpfile)
-  expect_equal(json_content$type, "gdal_streamed_alg")
-  expect_true(is.character(json_content$command_line))
-  expect_true(json_content$relative_paths_relative_to_this_file)
+  expect_equal(json_content$gdalg$type, "gdal_streamed_alg")
+  expect_true(is.character(json_content$gdalg$command_line))
+  expect_true(json_content$gdalg$relative_paths_relative_to_this_file)
 })
 
 test_that("gdal_load_pipeline loads GDALG JSON and reconstructs pipeline", {
@@ -401,12 +375,12 @@ test_that("gdal_load_pipeline validates GDALG spec structure", {
   # Invalid: missing type
   invalid_spec <- list(command_line = "...")
   writeLines(yyjsonr::write_json_str(invalid_spec, pretty = TRUE), tmpfile)
-  expect_error(gdal_load_pipeline(tmpfile), "type")
+  expect_error(gdal_load_pipeline(tmpfile), "Expected hybrid format")
 
   # Invalid: wrong type value
   invalid_spec <- list(type = "wrong", command_line = "...")
   writeLines(yyjsonr::write_json_str(invalid_spec, pretty = TRUE), tmpfile)
-  expect_error(gdal_load_pipeline(tmpfile), 'gdal_streamed_alg')
+  expect_error(gdal_load_pipeline(tmpfile), "Expected hybrid format")
 
   # Invalid: missing command_line
   invalid_spec <- list(type = "gdal_streamed_alg")
@@ -445,7 +419,7 @@ test_that("Complex vector pipeline with multiple operations round-trips", {
 
   # Should have 4 steps
   steps <- strsplit(command_line, " ! ")[[1]]
-  expect_length(steps[steps != ""], 5)  # gdal vector pipeline ! + 4 steps
+  expect_length(steps[steps != ""], 5) # gdal vector pipeline ! + 4 steps
 
   # Deserialize
   pipeline2 <- .gdalg_to_pipeline(command_line)

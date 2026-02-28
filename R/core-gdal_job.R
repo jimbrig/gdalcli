@@ -127,14 +127,14 @@ new_gdal_job <- function(command_path,
 #' @export
 print.gdal_job <- function(x, ...) {
   cat("<gdal_job>\n")
-  
+
   # If this job has a pipeline, show the full pipeline structure
   if (!is.null(x$pipeline)) {
     cat("Pipeline: ", length(x$pipeline$jobs), " step(s)\n", sep = "")
-    
+
     for (i in seq_along(x$pipeline$jobs)) {
       job <- x$pipeline$jobs[[i]]
-      
+
       # Get command name
       cmd_path <- job$command_path
       if (length(cmd_path) > 0 && cmd_path[1] == "gdal") {
@@ -145,23 +145,23 @@ print.gdal_job <- function(x, ...) {
       } else {
         "unknown"
       }
-      
+
       # Get input/output if present
       input_str <- if (!is.null(job$arguments$input)) {
         sprintf(" (input: %s)", job$arguments$input)
       } else {
         ""
       }
-      
+
       output_str <- if (!is.null(job$arguments$output)) {
         sprintf(" (output: %s)", job$arguments$output)
       } else {
         ""
       }
-      
+
       cat(sprintf("  [%d] %s%s%s\n", i, cmd_name, input_str, output_str))
     }
-    
+
     # Show wrapper-level config options if present
     if (length(x$config_options) > 0) {
       cat("Config Options:\n")
@@ -171,7 +171,7 @@ print.gdal_job <- function(x, ...) {
         cat(sprintf("  %s=%s\n", opt_name, opt_val))
       }
     }
-    
+
     # Show wrapper-level creation options if present
     if (!is.null(x$arguments[["creation-option"]]) && length(x$arguments[["creation-option"]]) > 0) {
       cat("Creation Options:\n")
@@ -265,23 +265,23 @@ print.gdal_job <- function(x, ...) {
 #' @export
 str.gdal_job <- function(object, ..., max.level = 1, vec.len = 4) {
   cat("<gdal_job>")
-  
+
   # Show command path
   if (length(object$command_path) > 0) {
     cmd_str <- paste(object$command_path, collapse = " ")
     cat(sprintf(" [Command: gdal %s]", cmd_str))
   }
-  
+
   # Show key arguments count
   if (length(object$arguments) > 0) {
     cat(sprintf(" [%d args]", length(object$arguments)))
   }
-  
+
   # Show pipeline info if present
   if (!is.null(object$pipeline)) {
     cat(sprintf(" [Pipeline: %d jobs]", length(object$pipeline$jobs)))
   }
-  
+
   cat("\n")
   invisible(object)
 }
@@ -310,16 +310,16 @@ str.gdal_job <- function(object, ..., max.level = 1, vec.len = 4) {
 #'   gdal_raster_scale(src_min = 0, src_max = 100) |>
 #'   gdal_raster_convert(output = "output.tif")
 #'
-#' length(pipeline)           # Returns 3
-#' pipeline[1]                # First job
-#' pipeline[1:2]              # First two jobs
-#' pipeline$command_path      # Access property
-#' pipeline$config_options <- c("OPT=VALUE")  # Set property
+#' length(pipeline) # Returns 3
+#' pipeline[1] # First job
+#' pipeline[1:2] # First two jobs
+#' pipeline$command_path # Access property
+#' pipeline$config_options <- c("OPT=VALUE") # Set property
 #'
 #' job1 <- gdal_raster_reproject(input = "in.tif", dst_crs = "EPSG:32632")
 #' job2 <- gdal_raster_scale(src_min = 0, src_max = 100)
 #' job3 <- gdal_raster_convert(output = "out.tif")
-#' combined <- c(job1, job2, job3)  # Combine into pipeline
+#' combined <- c(job1, job2, job3) # Combine into pipeline
 #' }
 #'
 #' @name gdal_job-subsetting
@@ -344,14 +344,14 @@ NULL
     if (any(i < 1) || any(i > length(x$pipeline$jobs))) {
       rlang::abort(sprintf("Index out of bounds: job has %d steps", length(x$pipeline$jobs)))
     }
-    
+
     selected_jobs <- x$pipeline$jobs[i]
-    
+
     # If selecting a single job, return it directly
     if (length(i) == 1) {
       return(selected_jobs[[1]])
     }
-    
+
     # If selecting multiple jobs, create a new pipeline job wrapper
     new_pipeline <- new_gdal_pipeline(selected_jobs, name = x$pipeline$name, description = x$pipeline$description)
     return(new_gdal_job(
@@ -382,8 +382,10 @@ length.gdal_job <- function(x) {
 #' @rdname gdal_job-subsetting
 #' @export
 names.gdal_job <- function(x) {
-  c("command_path", "arguments", "config_options", "env_vars",
-    "stream_in", "stream_out_format", "pipeline", "arg_mapping")
+  c(
+    "command_path", "arguments", "config_options", "env_vars",
+    "stream_in", "stream_out_format", "pipeline", "arg_mapping"
+  )
 }
 
 # ============================================================================
@@ -425,13 +427,13 @@ names.gdal_job <- function(x) {
 .get_output_arguments <- function(job) {
   output_names <- c("output", "dest_dataset", "dst_dataset", "output_layer")
   output_args <- list()
-  
+
   for (name in output_names) {
     if (!is.null(job$arguments[[name]])) {
       output_args[[name]] <- job$arguments[[name]]
     }
   }
-  
+
   output_args
 }
 
@@ -460,18 +462,19 @@ names.gdal_job <- function(x) {
       rlang::abort(sprintf("jobs[[%d]] must be a gdal_job object", i))
     }
 
-    # Extract and parse command path
-    cmd_path <- job$command_path
-    if (length(cmd_path) > 0 && cmd_path[1] == "gdal") {
-      cmd_path <- cmd_path[-1]
+    # Extract command parts (skip "gdal" prefix if present)
+    command_parts <- if (length(job$command_path) > 0 && job$command_path[1] == "gdal") {
+      job$command_path[-1]
+    } else {
+      job$command_path
     }
 
-    if (length(cmd_path) < 2) {
-      rlang::abort(sprintf("Invalid command path for job %d: %s", i, paste(cmd_path, collapse = " ")))
+    if (length(command_parts) < 2) {
+      rlang::abort(sprintf("Invalid command path for job %d: %s", i, paste(command_parts, collapse = " ")))
     }
 
-    cmd_type <- cmd_path[1]  # "raster" or "vector"
-    operation <- cmd_path[2]  # The actual operation name
+    cmd_type <- command_parts[1] # "raster" or "vector"
+    operation <- command_parts[length(command_parts)] # The actual operation name
 
     # Get step name from RFC 104 mappings (loaded at package load time)
     step_name <- .get_step_mapping(cmd_type, operation)
@@ -479,114 +482,97 @@ names.gdal_job <- function(x) {
     # Determine job position
     is_first <- (i == 1)
     is_last <- (i == num_jobs)
-    is_intermediate <- (!is_first && !is_last)
 
-    # Build step arguments
-    step_args <- character()
-    args <- job$arguments
-    args_copy <- args  # Keep copy for later processing
+    # Separate positional and option arguments
+    positional_args_map <- list()
+    option_parts <- character()
 
-    # Determine if this job has output
-    has_output <- .has_output_argument(job)
+    arg_mapping <- if (!is.null(job$arg_mapping)) job$arg_mapping else list()
 
-    # Handle input/output based on job position
-    if (step_name == "read") {
-      # For read step, input is positional
-      if (!is.null(args_copy$input)) {
-        step_args <- c(step_args, args_copy$input)
-        args_copy$input <- NULL
-      }
-    } else if (step_name == "write") {
-      # For write step, output is positional
-      if (!is.null(args_copy$output)) {
-        step_args <- c(step_args, args_copy$output)
-        args_copy$output <- NULL
-      }
-    } else if (is_first) {
-      # First job: emit ! read input if input exists and we're not already a read step
-      if (!is.null(args_copy$input)) {
-        read_step <- paste0("! read ", args_copy$input)
-        pipeline_parts <- c(pipeline_parts, read_step)
-        args_copy$input <- NULL
-      }
-    } else if (is_intermediate || is_last) {
-      # Intermediate and last jobs: strip input/output from step arguments
-      # (they flow through pipeline or are handled separately)
-      args_copy$input <- NULL
-      
-      # For output args, strip them all from args_copy
-      output_names <- c("output", "dest_dataset", "dst_dataset", "output_layer")
-      for (name in output_names) {
-        args_copy[[name]] <- NULL
-      }
-      
-      # Check if intermediate job has multiple outputs
-      if (is_intermediate && has_output) {
-        output_args <- .get_output_arguments(job)
-        if (length(output_args) > 1) {
-          cli::cli_warn(
-            c(
-              "Intermediate job {i} has multiple outputs.",
-              "i" = "Native GDAL pipelines work best with single outputs per step.",
-              "i" = "Consider using sequential execution mode instead."
-            )
-          )
-        }
-      }
-    }
-
-    # Convert remaining arguments to CLI flags for pipeline context
-    # Skip arguments that shouldn't be in pipeline
+    # Skip arguments that shouldn't be in pipeline options
     skip_args <- c(
       "pipeline", "input_format", "output_format", "open_option",
       "creation_option", "creation-option", "layer_creation_option", "layer-creation-option",
       "input_layer", "output_layer", "overwrite", "update", "append", "overwrite_layer"
     )
 
-    for (arg_name in names(args_copy)) {
-      arg_val <- args_copy[[arg_name]]
+    for (arg_name in names(job$arguments)) {
+      arg_value <- job$arguments[[arg_name]]
 
-      # Skip certain arguments that don't apply in pipeline context
-      if (arg_name %in% skip_args) {
+      if (is.null(arg_value) || arg_name %in% skip_args) {
         next
       }
 
-      if (!is.null(arg_val)) {
-        # Convert R argument name to CLI flag
-        cli_flag <- paste0("--", gsub("_", "-", arg_name))
+      positional_arg_names <- c("input", "output", "src_dataset", "dest_dataset", "dataset")
+      is_positional <- arg_name %in% positional_arg_names
 
-        # Format the value
-        if (is.logical(arg_val)) {
-          if (arg_val) {
-            step_args <- c(step_args, cli_flag)
-          }
-        } else if (is.character(arg_val)) {
-          if (length(arg_val) == 1) {
-            step_args <- c(step_args, cli_flag, arg_val)
-          } else {
-            # Multiple values - repeat flag for each
-            for (v in arg_val) {
-              step_args <- c(step_args, cli_flag, v)
-            }
-          }
-        } else if (is.numeric(arg_val)) {
-          step_args <- c(step_args, cli_flag, as.character(arg_val))
+      if (is_positional) {
+        positional_args_map[[arg_name]] <- arg_value
+      } else {
+        # Format the option using the RFC 104 formatter which handles quoting
+        formatted <- .format_rfc104_argument(arg_value, arg_name, arg_mapping)
+        option_parts <- c(option_parts, formatted)
+      }
+    }
+
+    # First job: emit ! read input if input exists and we're not already a read step
+    if (is_first && step_name != "read") {
+      input_val <- NULL
+      for (arg in c("input", "src_dataset", "dataset")) {
+        if (!is.null(positional_args_map[[arg]])) {
+          input_val <- positional_args_map[[arg]]
+          break
+        }
+      }
+      if (!is.null(input_val)) {
+        if (length(input_val) > 1) {
+          formatted_inputs <- sapply(input_val, function(v) .quote_argument(as.character(v)), USE.NAMES = FALSE)
+          pipeline_parts <- c(pipeline_parts, paste(c("! read", formatted_inputs), collapse = " "))
+        } else {
+          pipeline_parts <- c(pipeline_parts, paste("! read", .quote_argument(as.character(input_val))))
         }
       }
     }
 
-    # Build the step string
-    step_str <- paste(c(step_name, step_args), collapse = " ")
-    pipeline_parts <- c(pipeline_parts, paste0("! ", step_str))
+    # Build the current step. Exclude positional input/output files UNLESS it's explicitly read/write
+    step_parts <- c(step_name, option_parts)
 
-    # For last job, append ! write output if it has output
-    if (is_last && has_output && step_name != "write") {
-      output_args <- .get_output_arguments(job)
-      # Use the first output for write step
-      first_output <- output_args[[1]]
-      if (!is.null(first_output)) {
-        write_step <- paste0("! write ", first_output)
-        pipeline_parts <- c(pipeline_parts, write_step)
+    if (step_name == "read") {
+      for (arg in c("input", "src_dataset", "dataset")) {
+        if (!is.null(positional_args_map[[arg]])) {
+          val <- positional_args_map[[arg]]
+          step_parts <- c(step_parts, if (length(val) > 1) sapply(val, function(v) .quote_argument(as.character(v))) else .quote_argument(as.character(val)))
+          break
+        }
+      }
+    } else if (step_name == "write") {
+      for (arg in c("output", "dest_dataset")) {
+        if (!is.null(positional_args_map[[arg]])) {
+          val <- positional_args_map[[arg]]
+          step_parts <- c(step_parts, if (length(val) > 1) sapply(val, function(v) .quote_argument(as.character(v))) else .quote_argument(as.character(val)))
+          break
+        }
+      }
+    }
+
+    pipeline_parts <- c(pipeline_parts, paste(c("!", step_parts), collapse = " "))
+
+    # Last job: append ! write output if it has output and isn't a write step
+    if (is_last && step_name != "write") {
+      output_val <- NULL
+      for (arg in c("output", "dest_dataset")) {
+        if (!is.null(positional_args_map[[arg]])) {
+          output_val <- positional_args_map[[arg]]
+          break
+        }
+      }
+      if (!is.null(output_val)) {
+        if (length(output_val) > 1) {
+          formatted_outputs <- sapply(output_val, function(v) .quote_argument(as.character(v)), USE.NAMES = FALSE)
+          pipeline_parts <- c(pipeline_parts, paste(c("! write", formatted_outputs), collapse = " "))
+        } else {
+          pipeline_parts <- c(pipeline_parts, paste("! write", .quote_argument(as.character(output_val))))
+        }
       }
     }
   }
@@ -645,7 +631,7 @@ names.gdal_job <- function(x) {
         } else if ("src_dataset" %in% input_param_names) {
           merged$src_dataset <- job_args[[output_name]]
         }
-        break  # Use first available output
+        break # Use first available output
       }
     }
   }
@@ -675,33 +661,33 @@ names.gdal_job <- function(x) {
   # Base slots
   slots <- c(
     "command_path",
-    "arguments", 
+    "arguments",
     "config_options",
     "env_vars",
     "stream_in",
     "stream_out_format",
     "pipeline"
   )
-  
+
   # Convenience methods
   methods <- c(
-    "run",           # Execute the job
-    "print",         # Print job details
-    "with_co",       # Add creation options
-    "with_config",   # Add config options
-    "with_env",      # Add environment variables
-    "with_lco",      # Add layer creation options
-    "with_oo",       # Add open options
-    "merge",         # Merge with another job
-    "clone"          # Create a copy
+    "run", # Execute the job
+    "print", # Print job details
+    "with_co", # Add creation options
+    "with_config", # Add config options
+    "with_env", # Add environment variables
+    "with_lco", # Add layer creation options
+    "with_oo", # Add open options
+    "merge", # Merge with another job
+    "clone" # Create a copy
   )
-  
+
   # Combine and filter by pattern
   all_names <- c(slots, methods)
   if (nzchar(pattern)) {
     all_names <- grep(pattern, all_names, value = TRUE)
   }
-  
+
   all_names
 }
 
@@ -718,22 +704,21 @@ names.gdal_job <- function(x) {
 #'
 #' @examples
 #' job <- gdal_raster_convert(input = "input.tif", output = "output.jpg")
-#' 
+#'
 #' # Access slots
 #' cmd <- job$command_path
 #' args <- job$arguments
-#' 
+#'
 #' # Use convenience methods (creates new job, doesn't execute)
 #' job_with_co <- job$with_co("COMPRESS=LZW")
-#' 
-#' 
+#'
 #' @export
 `$.gdal_job` <- function(x, name) {
   # Try direct property access first using standard list semantics
   if (name %in% names(x)) {
     return(.subset2(x, name))
   }
-  
+
   # Then try convenience methods
   switch(name,
     "run" = function(...) gdal_job_run(x, ...),
@@ -782,25 +767,25 @@ names.gdal_job <- function(x) {
   if (is.null(x$pipeline)) {
     rlang::abort("Cannot use [<- on a standalone job (no pipeline)")
   }
-  
+
   # Ensure value is a list of gdal_job objects
   if (inherits(value, "gdal_job")) {
     value <- list(value)
   } else if (!is.list(value)) {
     rlang::abort("Replacement value must be a gdal_job or list of gdal_job objects")
   }
-  
+
   # Check all items are gdal_job objects
   for (v in value) {
     if (!inherits(v, "gdal_job")) {
       rlang::abort("All items in replacement value must be gdal_job objects")
     }
   }
-  
+
   # Replace jobs in pipeline
   new_jobs <- x$pipeline$jobs
   new_jobs[i] <- value
-  
+
   new_pipeline <- new_gdal_pipeline(new_jobs, name = x$pipeline$name, description = x$pipeline$description)
   new_gdal_job(
     command_path = x$command_path,
@@ -816,14 +801,14 @@ names.gdal_job <- function(x) {
 #' @export
 c.gdal_job <- function(..., recursive = FALSE) {
   jobs <- list(...)
-  
+
   # Flatten any nested pipelines
   flattened_jobs <- list()
   for (job in jobs) {
     if (!inherits(job, "gdal_job")) {
       rlang::abort("All arguments to c() must be gdal_job objects")
     }
-    
+
     if (!is.null(job$pipeline)) {
       # Job is a pipeline wrapper - extract its jobs
       flattened_jobs <- c(flattened_jobs, job$pipeline$jobs)
@@ -832,14 +817,14 @@ c.gdal_job <- function(..., recursive = FALSE) {
       flattened_jobs <- c(flattened_jobs, list(job))
     }
   }
-  
+
   # Create wrapper with combined pipeline
   new_pipeline <- new_gdal_pipeline(
     flattened_jobs,
     name = NULL,
     description = "Combined pipeline"
   )
-  
+
   new_gdal_job(
     command_path = character(),
     arguments = list(),
@@ -848,7 +833,6 @@ c.gdal_job <- function(..., recursive = FALSE) {
     pipeline = new_pipeline
   )
 }
-
 
 
 # ============================================================================

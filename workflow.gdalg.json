@@ -1,0 +1,11 @@
+{
+  "type": [
+    "gdal_streamed_alg"
+  ],
+  "command_line": [
+    "gdal raster pipeline ! reproject --dst-crs EPSG:32632 /home/andrew/workspace/gdalcli/inst/extdata/sample_clay_content.tif /vsimem/gdalcli_3bdba7b6dcbc3.tif ! scale --src-min 0 --src-max 100 --dst-min 0 --dst-max 255 /vsimem/gdalcli_3bdba7b6dcbc3.tif /vsimem/gdalcli_3bdba76a8ac01.tif ! convert --output-format COG /vsimem/gdalcli_3bdba76a8ac01.tif /tmp/RtmpbdQr7f/file3bdba2fbd0807.tif"
+  ],
+  "relative_paths_relative_to_this_file": [
+    true
+  ]
+}

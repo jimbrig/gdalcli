@@ -94,7 +94,7 @@ gdal_job_run <- function(x, ..., backend = NULL) {
       if (.check_gdalraster_version("2.2.0", quietly = TRUE)) {
         backend <- "gdalraster"
       } else {
-        backend <- "processx"  # fallback
+        backend <- "processx" # fallback
       }
     }
   }
@@ -140,11 +140,11 @@ gdal_job_run <- function(x, ..., backend = NULL) {
 #' @export
 #' @method gdal_job_run gdal_job
 gdal_job_run.gdal_job <- function(x,
-                              stream_in = NULL,
-                              stream_out_format = NULL,
-                              env = NULL,
-                              verbose = FALSE,
-                              ...) {
+                                  stream_in = NULL,
+                                  stream_out_format = NULL,
+                                  env = NULL,
+                                  verbose = FALSE,
+                                  ...) {
   # Check if processx backend is available
   if (!requireNamespace("processx", quietly = TRUE)) {
     cli::cli_abort(
@@ -164,7 +164,7 @@ gdal_job_run.gdal_job <- function(x,
 
   # Resolve streaming parameters (explicit args override job specs, which override global options)
   stream_in_final <- if (!is.null(stream_in)) stream_in else x$stream_in
-  
+
   # Resolve stream_out_format with priority: explicit arg > job spec > global option > NULL
   stream_out_final <- if (!is.null(stream_out_format)) {
     stream_out_format
@@ -173,7 +173,8 @@ gdal_job_run.gdal_job <- function(x,
   } else {
     getOption("gdalcli.stream_out_format", NULL)
   }
-  
+  if (length(stream_out_final) == 0) stream_out_final <- NULL
+
   # Resolve verbose with priority: explicit arg > global option > FALSE
   verbose_final <- if (!is.na(verbose) && is.logical(verbose)) {
     verbose
@@ -191,7 +192,7 @@ gdal_job_run.gdal_job <- function(x,
   stdin_arg <- if (!is.null(stream_in_final)) stream_in_final else NULL
   # For "stdout" format, use TRUE to pipe directly to parent stdout
   # For other formats, use "|" to capture output
-  stdout_arg <- if (stream_out_final == "stdout") TRUE else if (!is.null(stream_out_final)) "|" else NULL
+  stdout_arg <- if (!is.null(stream_out_final) && stream_out_final == "stdout") TRUE else if (!is.null(stream_out_final)) "|" else NULL
 
   if (verbose_final) {
     cli::cli_alert_info(sprintf("Executing: gdal %s", paste(args, collapse = " ")))
@@ -218,18 +219,21 @@ gdal_job_run.gdal_job <- function(x,
       return(charToRaw(result$stdout))
     } else if (stream_out_final == "json") {
       # Try to parse as JSON
-      tryCatch({
-        return(yyjsonr::read_json_str(result$stdout))
-      }, .error = function(e) {
-        cli::cli_warn(
-          c(
-            "Failed to parse output as JSON",
-            "x" = conditionMessage(e),
-            "i" = "Returning raw stdout instead"
+      tryCatch(
+        {
+          return(yyjsonr::read_json_str(result$stdout))
+        },
+        .error = function(e) {
+          cli::cli_warn(
+            c(
+              "Failed to parse output as JSON",
+              "x" = conditionMessage(e),
+              "i" = "Returning raw stdout instead"
+            )
           )
-        )
-        return(result$stdout)
-      })
+          return(result$stdout)
+        }
+      )
     }
   }
 
@@ -296,7 +300,7 @@ gdal_job_run.gdal_job <- function(x,
         # by checking arg_mapping if available
         arg_meta <- arg_mapping[[arg_name]]
         is_composite <- FALSE
-        
+
         if (!is.null(arg_meta) && !is.null(arg_meta$min_count) && !is.null(arg_meta$max_count)) {
           # Composite argument: min_count == max_count and both > 1
           is_composite <- arg_meta$min_count == arg_meta$max_count && arg_meta$min_count > 1
@@ -434,12 +438,12 @@ gdal_job_run.default <- function(x, ...) {
 #' @keywords internal
 #' @noRd
 .gdal_job_run_gdalraster <- function(job,
-                               stream_in = NULL,
-                               stream_out_format = NULL,
-                               env = NULL,
-                               verbose = FALSE,
-                               audit = FALSE,
-                               ...) {
+                                     stream_in = NULL,
+                                     stream_out_format = NULL,
+                                     env = NULL,
+                                     verbose = FALSE,
+                                     audit = FALSE,
+                                     ...) {
   # If this job has a pipeline history, run the pipeline instead
   if (inherits(job, "gdal_job") && !is.null(job$pipeline)) {
     return(gdal_job_run(job$pipeline, backend = "gdalraster", ...))
@@ -458,11 +462,14 @@ gdal_job_run.default <- function(x, ...) {
   # Capture explicit args if audit is enabled
   explicit_args <- NULL
   if (audit && .gdal_has_feature("explicit_args")) {
-    explicit_args <- tryCatch({
-      gdal_job_get_explicit_args(job)
-    }, error = function(e) {
-      NULL
-    })
+    explicit_args <- tryCatch(
+      {
+        gdal_job_get_explicit_args(job)
+      },
+      error = function(e) {
+        NULL
+      }
+    )
   }
 
   # Prepare environment variables
@@ -471,9 +478,12 @@ gdal_job_run.default <- function(x, ...) {
   # Set environment variables
   if (length(env_final) > 0) {
     old_env <- Sys.getenv(names(env_final))
-    on.exit({
-      do.call(Sys.setenv, as.list(old_env))
-    }, add = TRUE)
+    on.exit(
+      {
+        do.call(Sys.setenv, as.list(old_env))
+      },
+      add = TRUE
+    )
     do.call(Sys.setenv, as.list(env_final))
   }
 
@@ -485,7 +495,7 @@ gdal_job_run.default <- function(x, ...) {
   }
 
   # Extract command path (module + operation) and remaining arguments
-  cmd <- args_serialized[1:2]  # e.g., c("raster", "info")
+  cmd <- args_serialized[1:2] # e.g., c("raster", "info")
   remaining_args <- if (length(args_serialized) > 2) args_serialized[-(1:2)] else character()
 
   if (verbose) {
@@ -493,153 +503,165 @@ gdal_job_run.default <- function(x, ...) {
   }
 
   # Use gdalraster::gdal_alg() to execute the command
-  tryCatch({
-    # Define positional argument names (arguments that don't use -- prefix)
-    positional_arg_names <- c("input", "output", "src_dataset", "dest_dataset", "dataset")
+  tryCatch(
+    {
+      # Define positional argument names (arguments that don't use -- prefix)
+      positional_arg_names <- c("input", "output", "src_dataset", "dest_dataset", "dataset")
 
-    # Collect positional and option arguments separately
-    positional_args <- character()
-    option_args <- character()
+      # Collect positional and option arguments separately
+      positional_args <- character()
+      option_args <- character()
 
-    # Parse remaining arguments
-    i <- 1
-    while (i <= length(remaining_args)) {
-      arg_token <- remaining_args[i]
+      # Parse remaining arguments
+      i <- 1
+      while (i <= length(remaining_args)) {
+        arg_token <- remaining_args[i]
 
-      # Check if this is a flag (starts with --)
-      if (startsWith(arg_token, "--")) {
-        # This is an option argument
-        option_args <- c(option_args, arg_token)
+        # Check if this is a flag (starts with --)
+        if (startsWith(arg_token, "--")) {
+          # This is an option argument
+          option_args <- c(option_args, arg_token)
 
-        # Check if next element is a value (not a flag)
-        if (i + 1 <= length(remaining_args) && !startsWith(remaining_args[i + 1], "--")) {
-          option_args <- c(option_args, remaining_args[i + 1])
-          i <- i + 2
+          # Check if next element is a value (not a flag)
+          if (i + 1 <= length(remaining_args) && !startsWith(remaining_args[i + 1], "--")) {
+            option_args <- c(option_args, remaining_args[i + 1])
+            i <- i + 2
+          } else {
+            i <- i + 1
+          }
         } else {
+          # This is a positional argument
+          positional_args <- c(positional_args, arg_token)
           i <- i + 1
         }
-      } else {
-        # This is a positional argument
-        positional_args <- c(positional_args, arg_token)
-        i <- i + 1
       }
-    }
 
-    # Combine: option args first, then positional args
-    final_args <- c(option_args, positional_args)
+      # Combine: option args first, then positional args
+      final_args <- c(option_args, positional_args)
 
-    # Instantiate the algorithm with command and all arguments
-    # We pass all args to gdal_alg since gdalraster needs positional args
-    # to be specified together with the command
-    alg <- tryCatch({
-      gdalraster::gdal_alg(cmd = cmd, args = final_args)
-    }, .error = function(alg_e) {
-      # Check if this is a GDAL error from the constructor
-      alg_msg <- conditionMessage(alg_e)
-      if (grepl("GDAL FAILURE", alg_msg)) {
-        matches <- regmatches(alg_msg, regexec("GDAL FAILURE [0-9]+: ([^\\n]+)", alg_msg))
-        if (length(matches[[1]]) > 1) {
-          gdal_error <- matches[[1]][2]
-          stop(gdal_error)
+      # Instantiate the algorithm with command and all arguments
+      # We pass all args to gdal_alg since gdalraster needs positional args
+      # to be specified together with the command
+      alg <- tryCatch(
+        {
+          gdalraster::gdal_alg(cmd = cmd, args = final_args)
+        },
+        .error = function(alg_e) {
+          # Check if this is a GDAL error from the constructor
+          alg_msg <- conditionMessage(alg_e)
+          if (grepl("GDAL FAILURE", alg_msg)) {
+            matches <- regmatches(alg_msg, regexec("GDAL FAILURE [0-9]+: ([^\\n]+)", alg_msg))
+            if (length(matches[[1]]) > 1) {
+              gdal_error <- matches[[1]][2]
+              stop(gdal_error)
+            }
+          }
+          # Re-throw if not a GDAL error
+          stop(alg_e)
         }
-      }
-      # Re-throw if not a GDAL error
-      stop(alg_e)
-    })
+      )
 
-    # Capture execution start time for audit trail
-    exec_start <- Sys.time()
+      # Capture execution start time for audit trail
+      exec_start <- Sys.time()
 
-    # Run the algorithm
-    tryCatch({
-      alg$run()
-    }, .error = function(run_e) {
-      # Check if this is a GDAL error
-      run_msg <- conditionMessage(run_e)
-      if (grepl("GDAL FAILURE", run_msg)) {
-        matches <- regmatches(run_msg, regexec("GDAL FAILURE [0-9]+: ([^\\n]+)", run_msg))
-        if (length(matches[[1]]) > 1) {
-          gdal_error <- matches[[1]][2]
-          stop(gdal_error)
+      # Run the algorithm
+      tryCatch(
+        {
+          alg$run()
+        },
+        .error = function(run_e) {
+          # Check if this is a GDAL error
+          run_msg <- conditionMessage(run_e)
+          if (grepl("GDAL FAILURE", run_msg)) {
+            matches <- regmatches(run_msg, regexec("GDAL FAILURE [0-9]+: ([^\\n]+)", run_msg))
+            if (length(matches[[1]]) > 1) {
+              gdal_error <- matches[[1]][2]
+              stop(gdal_error)
+            }
+          }
+          # Re-throw if not a GDAL error
+          stop(run_e)
         }
-      }
-      # Re-throw if not a GDAL error
-      stop(run_e)
-    })
+      )
 
-    # Capture execution end time
-    exec_end <- Sys.time()
+      # Capture execution end time
+      exec_end <- Sys.time()
 
-    # Handle output based on streaming format
-    result <- NULL
-    if (!is.null(stream_out_format)) {
-      # Get the algorithm output
-      output_text <- alg$output()
-      if (stream_out_format == "stdout") {
-        # Print to stdout
-        cat(output_text)
-        result <- NULL  # Don't return the output
-      } else if (stream_out_format == "text") {
-        result <- output_text
-      } else if (stream_out_format == "raw") {
-        result <- charToRaw(output_text)
-      } else if (stream_out_format == "json") {
-        # Try to parse as JSON
-        tryCatch({
-          result <- yyjsonr::read_json_str(output_text)
-        }, .error = function(e) {
-          cli::cli_warn(
-            c(
-              "Failed to parse output as JSON",
-              "x" = conditionMessage(e),
-              "i" = "Returning raw stdout instead"
-            )
+      # Handle output based on streaming format
+      result <- NULL
+      if (!is.null(stream_out_format)) {
+        # Get the algorithm output
+        output_text <- alg$output()
+        if (stream_out_format == "stdout") {
+          # Print to stdout
+          cat(output_text)
+          result <- NULL # Don't return the output
+        } else if (stream_out_format == "text") {
+          result <- output_text
+        } else if (stream_out_format == "raw") {
+          result <- charToRaw(output_text)
+        } else if (stream_out_format == "json") {
+          # Try to parse as JSON
+          tryCatch(
+            {
+              result <- yyjsonr::read_json_str(output_text)
+            },
+            .error = function(e) {
+              cli::cli_warn(
+                c(
+                  "Failed to parse output as JSON",
+                  "x" = conditionMessage(e),
+                  "i" = "Returning raw stdout instead"
+                )
+              )
+              result <<- output_text
+            }
           )
-          result <<- output_text
-        })
+        }
       }
-    }
 
-    # Attach audit metadata if requested
-    if (audit && !is.null(result)) {
-      audit_trail <- list(
-        timestamp = exec_start,
-        duration = difftime(exec_end, exec_start, units = "secs"),
-        command = paste(c("gdal", args_serialized), collapse = " "),
-        backend = "gdalraster",
-        explicit_args = explicit_args,
-        status = "success"
-      )
-      attr(result, "audit_trail") <- audit_trail
-    }
-
-    if (!is.null(result)) {
-      return(result)
-    }
-
-    invisible(TRUE)
-  }, .error = function(e) {
-    # Try to extract GDAL error from the error message
-    error_msg <- conditionMessage(e)
-    
-    # If the error message contains GDAL FAILURE, extract it
-    if (grepl("GDAL FAILURE", error_msg)) {
-      # Look for the GDAL error pattern
-      matches <- regmatches(error_msg, regexec("GDAL FAILURE [0-9]+: ([^\\n]+)", error_msg))
-      if (length(matches[[1]]) > 1) {
-        gdal_error <- matches[[1]][2]
-        cli::cli_abort(gdal_error)
+      # Attach audit metadata if requested
+      if (audit && !is.null(result)) {
+        audit_trail <- list(
+          timestamp = exec_start,
+          duration = difftime(exec_end, exec_start, units = "secs"),
+          command = paste(c("gdal", args_serialized), collapse = " "),
+          backend = "gdalraster",
+          explicit_args = explicit_args,
+          status = "success"
+        )
+        attr(result, "audit_trail") <- audit_trail
       }
-    }
-    
-    # Fallback: re-throw the original error
-    cli::cli_abort(
-      c(
-        "GDAL command failed via gdalraster",
-        "x" = error_msg
+
+      if (!is.null(result)) {
+        return(result)
+      }
+
+      invisible(TRUE)
+    },
+    .error = function(e) {
+      # Try to extract GDAL error from the error message
+      error_msg <- conditionMessage(e)
+
+      # If the error message contains GDAL FAILURE, extract it
+      if (grepl("GDAL FAILURE", error_msg)) {
+        # Look for the GDAL error pattern
+        matches <- regmatches(error_msg, regexec("GDAL FAILURE [0-9]+: ([^\\n]+)", error_msg))
+        if (length(matches[[1]]) > 1) {
+          gdal_error <- matches[[1]][2]
+          cli::cli_abort(gdal_error)
+        }
+      }
+
+      # Fallback: re-throw the original error
+      cli::cli_abort(
+        c(
+          "GDAL command failed via gdalraster",
+          "x" = error_msg
+        )
       )
-    )
-  })
+    }
+  )
 }
 
 
@@ -658,9 +680,9 @@ gdal_job_run.default <- function(x, ...) {
 #' @keywords internal
 #' @noRd
 .gdal_job_run_native_pipeline_gdalraster <- function(pipeline,
-                                                      stream_out_format = NULL,
-                                                      env = NULL,
-                                                      verbose = FALSE) {
+                                                     stream_out_format = NULL,
+                                                     env = NULL,
+                                                     verbose = FALSE) {
   if (length(pipeline$jobs) == 0) {
     if (verbose) cli::cli_alert_info("Pipeline is empty - nothing to execute")
     return(invisible(TRUE))
@@ -719,48 +741,54 @@ gdal_job_run.default <- function(x, ...) {
     do.call(Sys.setenv, as.list(env_final))
   }
 
-  tryCatch({
-    # Create and run algorithm
-    alg <- gdalraster::gdal_alg(args, config_options = config_opts)
-    
-    # Parse for argv[0] (gdalraster may need it)
-    result <- alg$run()
+  tryCatch(
+    {
+      # Create and run algorithm
+      alg <- gdalraster::gdal_alg(args, config_options = config_opts)
 
-    # Handle output based on streaming format
-    if (!is.null(stream_out_format)) {
-      output_text <- alg$output()
-      if (stream_out_format == "stdout") {
-        # Print to stdout
-        cat(output_text)
-      } else if (stream_out_format == "text") {
-        return(output_text)
-      } else if (stream_out_format == "raw") {
-        return(charToRaw(output_text))
-      } else if (stream_out_format == "json") {
-        tryCatch({
-          return(yyjsonr::read_json_str(output_text))
-        }, .error = function(e) {
-          cli::cli_warn(
-            c(
-              "Failed to parse pipeline output as JSON",
-              "x" = conditionMessage(e),
-              "i" = "Returning raw output instead"
-            )
-          )
+      # Parse for argv[0] (gdalraster may need it)
+      result <- alg$run()
+
+      # Handle output based on streaming format
+      if (!is.null(stream_out_format)) {
+        output_text <- alg$output()
+        if (stream_out_format == "stdout") {
+          # Print to stdout
+          cat(output_text)
+        } else if (stream_out_format == "text") {
           return(output_text)
-        })
+        } else if (stream_out_format == "raw") {
+          return(charToRaw(output_text))
+        } else if (stream_out_format == "json") {
+          tryCatch(
+            {
+              return(yyjsonr::read_json_str(output_text))
+            },
+            .error = function(e) {
+              cli::cli_warn(
+                c(
+                  "Failed to parse pipeline output as JSON",
+                  "x" = conditionMessage(e),
+                  "i" = "Returning raw output instead"
+                )
+              )
+              return(output_text)
+            }
+          )
+        }
       }
-    }
 
-    invisible(TRUE)
-  }, .error = function(e) {
-    cli::cli_abort(
-      c(
-        "Native GDAL pipeline execution failed via gdalraster",
-        "x" = conditionMessage(e)
+      invisible(TRUE)
+    },
+    .error = function(e) {
+      cli::cli_abort(
+        c(
+          "Native GDAL pipeline execution failed via gdalraster",
+          "x" = conditionMessage(e)
+        )
       )
-    )
-  })
+    }
+  )
 }
 
 
@@ -775,12 +803,12 @@ gdal_job_run.default <- function(x, ...) {
 #' @keywords internal
 #' @noRd
 .gdal_job_run_reticulate <- function(job,
-                               stream_in = NULL,
-                               stream_out_format = NULL,
-                               env = NULL,
-                               verbose = FALSE,
-                               audit = FALSE,
-                               ...) {
+                                     stream_in = NULL,
+                                     stream_out_format = NULL,
+                                     env = NULL,
+                                     verbose = FALSE,
+                                     audit = FALSE,
+                                     ...) {
   # Check reticulate is available
   if (!requireNamespace("reticulate", quietly = TRUE)) {
     cli::cli_abort(
@@ -799,16 +827,20 @@ gdal_job_run.default <- function(x, ...) {
   # Capture explicit args if audit is enabled
   explicit_args <- NULL
   if (audit && .gdal_has_feature("explicit_args")) {
-    explicit_args <- tryCatch({
-      gdal_job_get_explicit_args(job)
-    }, error = function(e) {
-      NULL
-    })
+    explicit_args <- tryCatch(
+      {
+        gdal_job_get_explicit_args(job)
+      },
+      error = function(e) {
+        NULL
+      }
+    )
   }
 
   # Resolve streaming parameters (explicit args override job specs)
   stream_in_final <- if (!is.null(stream_in)) stream_in else job$stream_in
   stream_out_final <- if (!is.null(stream_out_format)) stream_out_format else job$stream_out_format
+  if (length(stream_out_final) == 0) stream_out_final <- NULL
 
   # Serialize the job to GDAL CLI arguments
   cli_args <- .serialize_gdal_job(job)
@@ -823,188 +855,152 @@ gdal_job_run.default <- function(x, ...) {
   # Set environment variables temporarily (only if there are any to set)
   if (length(env_final) > 0) {
     old_env <- Sys.getenv(names(env_final))
-    on.exit({
-      do.call(Sys.setenv, as.list(old_env))
-    }, add = TRUE)
+    on.exit(
+      {
+        do.call(Sys.setenv, as.list(old_env))
+      },
+      add = TRUE
+    )
     do.call(Sys.setenv, as.list(env_final))
   }
 
   # Capture execution start time for audit trail
   exec_start <- Sys.time()
 
-  tryCatch({
-    # Import GDAL Python module and sys for stdout capture
-    gdal_py <- reticulate::import("osgeo.gdal")
-    py_sys <- reticulate::import("sys")
-    py_io <- reticulate::import("io")
+  tryCatch(
+    {
+      # Import GDAL Python module and sys for stdout capture
+      gdal_py <- reticulate::import("osgeo.gdal")
+      py_sys <- reticulate::import("sys")
+      py_io <- reticulate::import("io")
 
-    # Extract command path (e.g., c("raster", "info"))
-    if (length(cli_args) < 2) {
-      cli::cli_abort("Invalid command: need at least two arguments (command type and operation)")
-    }
-
-    # Build command path as list: ["raster", "info"] or ["vector", "translate"]
-    command_path <- cli_args[1:2]
-
-    # Get remaining arguments
-    remaining_args <- if (length(cli_args) > 2) cli_args[-(1:2)] else character()
-
-    # Convert CLI arguments to Python kwargs dictionary
-    kwargs <- .convert_cli_args_to_kwargs(remaining_args)
-
-    # Handle input streaming: write stream_in data to /vsistdin/
-    if (!is.null(stream_in_final)) {
-      # Convert stream_in to character if needed
-      stdin_data <- if (is.raw(stream_in_final)) {
-        rawToChar(stream_in_final)
-      } else if (is.character(stream_in_final)) {
-        paste(stream_in_final, collapse = "\n")
-      } else {
-        as.character(stream_in_final)
+      # Extract command path (e.g., c("raster", "info"))
+      if (length(cli_args) < 2) {
+        cli::cli_abort("Invalid command: need at least two arguments (command type and operation)")
       }
 
-      # Write to /vsistdin/ using GDAL's VSI functions
-      py_gdal_vsi <- reticulate::import("osgeo.gdal")
-      py_vsi_file <- py_gdal_vsi$VSIFOpenL("/vsistdin/", "w")
-      
-      if (!is.null(py_vsi_file)) {
-        py_gdal_vsi$VSIFWriteL(stdin_data, 1L, nchar(stdin_data), py_vsi_file)
-        py_gdal_vsi$VSIFCloseL(py_vsi_file)
-      }
-    }
+      # Build command path as list: ["raster", "info"] or ["vector", "translate"]
+      command_path <- cli_args[1:2]
 
-    # Setup stdout capture if needed
-    captured_stdout <- NULL
-    old_stdout <- NULL
+      # Get remaining arguments
+      remaining_args <- if (length(cli_args) > 2) cli_args[-(1:2)] else character()
 
-    if (!is.null(stream_out_final)) {
-      # Capture stdout in Python
-      old_stdout <- py_sys$stdout
-      captured_stdout <- py_io$StringIO()
-      py_sys$stdout <- captured_stdout
-    }
+      # Convert CLI arguments to Python kwargs dictionary
+      kwargs <- .convert_cli_args_to_kwargs(remaining_args)
 
-    # Call gdal.Run() with command path and kwargs
-    if (verbose) {
-      cli::cli_alert_info(sprintf("Python gdal.Run(c('%s', '%s'), ...)", command_path[1], command_path[2]))
-    }
+      # Handle input streaming: write stream_in data to /vsistdin/
+      if (!is.null(stream_in_final)) {
+        # Convert stream_in to character if needed
+        stdin_data <- if (is.raw(stream_in_final)) {
+          rawToChar(stream_in_final)
+        } else if (is.character(stream_in_final)) {
+          paste(stream_in_final, collapse = "\n")
+        } else {
+          as.character(stream_in_final)
+        }
 
-    # Use gdal.Run() with list command path and dict kwargs
-    alg <- gdal_py$Run(
-      as.list(command_path),  # Convert to Python list
-      reticulate::dict(kwargs)  # Convert to Python dict
-    )
+        # Write to /vsistdin/ using GDAL's VSI functions
+        py_gdal_vsi <- reticulate::import("osgeo.gdal")
+        py_vsi_file <- py_gdal_vsi$VSIFOpenL("/vsistdin/", "w")
 
-    if (is.null(alg)) {
-      cli::cli_abort("gdal.Run() returned NULL - possible execution failure")
-    }
-
-    # Restore stdout before processing output
-    if (!is.null(old_stdout)) {
-      py_sys$stdout <- old_stdout
-    }
-
-    # Capture execution end time
-    exec_end <- Sys.time()
-
-    # Output format: we need to call alg.Output() to get results
-    has_output_method <- !is.null(alg) && (inherits(alg, "python.object"))
-
-    # Try to get output if requested
-    if (!is.null(stream_out_final) && has_output_method) {
-      # First try captured stdout
-      captured_output <- NULL
-      if (!is.null(captured_stdout)) {
-        tryCatch({
-          captured_output <- captured_stdout$getvalue()
-        }, error = function(e) {
-          captured_output <<- NULL
-        })
+        if (!is.null(py_vsi_file)) {
+          py_gdal_vsi$VSIFWriteL(stdin_data, 1L, nchar(stdin_data), py_vsi_file)
+          py_gdal_vsi$VSIFCloseL(py_vsi_file)
+        }
       }
 
-      # Try Output() method (capital O) if no captured stdout
-      output_result <- if (!is.null(captured_output) && nchar(captured_output) > 0) {
-        captured_output
-      } else {
-        tryCatch({
-          if (!is.null(alg$Output)) {
-            alg$Output()
-          } else if (!is.null(alg$output)) {
-            alg$output()
-          } else {
-            NULL
-          }
-        }, error = function(e) {
-          cli::cli_warn(sprintf("Could not retrieve output: %s", conditionMessage(e)))
-          NULL
-        })
+      # Setup stdout capture if needed
+      captured_stdout <- NULL
+      old_stdout <- NULL
+
+      if (!is.null(stream_out_final)) {
+        # Capture stdout in Python
+        old_stdout <- py_sys$stdout
+        captured_stdout <- py_io$StringIO()
+        py_sys$stdout <- captured_stdout
       }
 
-      # Process output if available
-      if (!is.null(output_result)) {
-        if (stream_out_final == "stdout") {
-          # Print to stdout
-          output_text <- if (is.character(output_result)) {
-            output_result
-          } else {
-            as.character(output_result)
-          }
-          cat(output_text)
-          invisible(TRUE)
-        } else if (stream_out_final == "text") {
-          # Convert to text if needed
-          output_text <- if (is.character(output_result)) {
-            output_result
-          } else {
-            as.character(output_result)
-          }
-          
-          # Attach audit metadata if requested
-          if (audit) {
-            audit_trail <- list(
-              timestamp = exec_start,
-              duration = difftime(exec_end, exec_start, units = "secs"),
-              command = paste(c("gdal", cli_args), collapse = " "),
-              backend = "reticulate",
-              explicit_args = explicit_args,
-              status = "success"
-            )
-            attr(output_text, "audit_trail") <- audit_trail
-          }
-          
-          return(output_text)
-        } else if (stream_out_final == "raw") {
-          output_text <- if (is.character(output_result)) {
-            output_result
-          } else {
-            as.character(output_result)
-          }
-          raw_output <- charToRaw(output_text)
-          
-          # Attach audit metadata if requested
-          if (audit) {
-            audit_trail <- list(
-              timestamp = exec_start,
-              duration = difftime(exec_end, exec_start, units = "secs"),
-              command = paste(c("gdal", cli_args), collapse = " "),
-              backend = "reticulate",
-              explicit_args = explicit_args,
-              status = "success"
-            )
-            attr(raw_output, "audit_trail") <- audit_trail
-          }
-          
-          return(raw_output)
-        } else if (stream_out_final == "json") {
-          # Try to parse as JSON
-          output_text <- if (is.character(output_result)) {
-            output_result
-          } else {
-            as.character(output_result)
-          }
-          tryCatch({
-            json_result <- yyjsonr::read_json_str(output_text)
-            
+      # Call gdal.Run() with command path and kwargs
+      if (verbose) {
+        cli::cli_alert_info(sprintf("Python gdal.Run(c('%s', '%s'), ...)", command_path[1], command_path[2]))
+      }
+
+      # Use gdal.Run() with list command path and dict kwargs
+      alg <- gdal_py$Run(
+        as.list(command_path), # Convert to Python list
+        reticulate::dict(kwargs) # Convert to Python dict
+      )
+
+      if (is.null(alg)) {
+        cli::cli_abort("gdal.Run() returned NULL - possible execution failure")
+      }
+
+      # Restore stdout before processing output
+      if (!is.null(old_stdout)) {
+        py_sys$stdout <- old_stdout
+      }
+
+      # Capture execution end time
+      exec_end <- Sys.time()
+
+      # Output format: we need to call alg.Output() to get results
+      has_output_method <- !is.null(alg) && (inherits(alg, "python.object"))
+
+      # Try to get output if requested
+      if (!is.null(stream_out_final) && has_output_method) {
+        # First try captured stdout
+        captured_output <- NULL
+        if (!is.null(captured_stdout)) {
+          tryCatch(
+            {
+              captured_output <- captured_stdout$getvalue()
+            },
+            error = function(e) {
+              captured_output <<- NULL
+            }
+          )
+        }
+
+        # Try Output() method (capital O) if no captured stdout
+        output_result <- if (!is.null(captured_output) && nchar(captured_output) > 0) {
+          captured_output
+        } else {
+          tryCatch(
+            {
+              if (!is.null(alg$Output)) {
+                alg$Output()
+              } else if (!is.null(alg$output)) {
+                alg$output()
+              } else {
+                NULL
+              }
+            },
+            error = function(e) {
+              cli::cli_warn(sprintf("Could not retrieve output: %s", conditionMessage(e)))
+              NULL
+            }
+          )
+        }
+
+        # Process output if available
+        if (!is.null(output_result)) {
+          if (stream_out_final == "stdout") {
+            # Print to stdout
+            output_text <- if (is.character(output_result)) {
+              output_result
+            } else {
+              as.character(output_result)
+            }
+            cat(output_text)
+            invisible(TRUE)
+          } else if (stream_out_final == "text") {
+            # Convert to text if needed
+            output_text <- if (is.character(output_result)) {
+              output_result
+            } else {
+              as.character(output_result)
+            }
+
             # Attach audit metadata if requested
             if (audit) {
               audit_trail <- list(
@@ -1015,59 +1011,113 @@ gdal_job_run.default <- function(x, ...) {
                 explicit_args = explicit_args,
                 status = "success"
               )
-              attr(json_result, "audit_trail") <- audit_trail
+              attr(output_text, "audit_trail") <- audit_trail
             }
-            
-            return(json_result)
-          }, error = function(e) {
-            cli::cli_warn(
-              c(
-                "Failed to parse output as JSON",
-                "x" = conditionMessage(e),
-                "i" = "Returning raw output instead"
-              )
-            )
+
             return(output_text)
-          })
+          } else if (stream_out_final == "raw") {
+            output_text <- if (is.character(output_result)) {
+              output_result
+            } else {
+              as.character(output_result)
+            }
+            raw_output <- charToRaw(output_text)
+
+            # Attach audit metadata if requested
+            if (audit) {
+              audit_trail <- list(
+                timestamp = exec_start,
+                duration = difftime(exec_end, exec_start, units = "secs"),
+                command = paste(c("gdal", cli_args), collapse = " "),
+                backend = "reticulate",
+                explicit_args = explicit_args,
+                status = "success"
+              )
+              attr(raw_output, "audit_trail") <- audit_trail
+            }
+
+            return(raw_output)
+          } else if (stream_out_final == "json") {
+            # Try to parse as JSON
+            output_text <- if (is.character(output_result)) {
+              output_result
+            } else {
+              as.character(output_result)
+            }
+            tryCatch(
+              {
+                json_result <- yyjsonr::read_json_str(output_text)
+
+                # Attach audit metadata if requested
+                if (audit) {
+                  audit_trail <- list(
+                    timestamp = exec_start,
+                    duration = difftime(exec_end, exec_start, units = "secs"),
+                    command = paste(c("gdal", cli_args), collapse = " "),
+                    backend = "reticulate",
+                    explicit_args = explicit_args,
+                    status = "success"
+                  )
+                  attr(json_result, "audit_trail") <- audit_trail
+                }
+
+                return(json_result)
+              },
+              error = function(e) {
+                cli::cli_warn(
+                  c(
+                    "Failed to parse output as JSON",
+                    "x" = conditionMessage(e),
+                    "i" = "Returning raw output instead"
+                  )
+                )
+                return(output_text)
+              }
+            )
+          }
         }
       }
-    }
 
-    # Attach audit metadata if requested (even when no output)
-    if (audit) {
-      audit_trail <- list(
-        timestamp = exec_start,
-        duration = difftime(exec_end, exec_start, units = "secs"),
-        command = paste(c("gdal", cli_args), collapse = " "),
-        backend = "reticulate",
-        explicit_args = explicit_args,
-        status = "success"
-      )
-      return(structure(TRUE, audit_trail = audit_trail))
-    }
-
-    invisible(TRUE)
-  }, error = function(e) {
-    # Restore stdout on error
-    tryCatch({
-      py_sys <- reticulate::import("sys")
-      if (!is.null(old_stdout)) {
-        py_sys$stdout <- old_stdout
+      # Attach audit metadata if requested (even when no output)
+      if (audit) {
+        audit_trail <- list(
+          timestamp = exec_start,
+          duration = difftime(exec_end, exec_start, units = "secs"),
+          command = paste(c("gdal", cli_args), collapse = " "),
+          backend = "reticulate",
+          explicit_args = explicit_args,
+          status = "success"
+        )
+        return(structure(TRUE, audit_trail = audit_trail))
       }
-    }, error = function(e2) {
-      # Silently ignore restoration errors
-    })
 
-    error_msg <- conditionMessage(e)
-    cli::cli_abort(
-      c(
-        "GDAL command failed via reticulate",
-        "x" = error_msg,
-        "i" = "Verify Python GDAL is installed: pip install GDAL",
-        "i" = "Check GDAL version is 3.11+"
+      invisible(TRUE)
+    },
+    error = function(e) {
+      # Restore stdout on error
+      tryCatch(
+        {
+          py_sys <- reticulate::import("sys")
+          if (!is.null(old_stdout)) {
+            py_sys$stdout <- old_stdout
+          }
+        },
+        error = function(e2) {
+          # Silently ignore restoration errors
+        }
       )
-    )
-  })
+
+      error_msg <- conditionMessage(e)
+      cli::cli_abort(
+        c(
+          "GDAL command failed via reticulate",
+          "x" = error_msg,
+          "i" = "Verify Python GDAL is installed: pip install GDAL",
+          "i" = "Check GDAL version is 3.11+"
+        )
+      )
+    }
+  )
 }
 
 
@@ -1097,7 +1147,7 @@ gdal_job_run.default <- function(x, ...) {
 
     if (startsWith(arg, "--")) {
       # Flag argument
-      flag_name <- substring(arg, 3)  # Remove "--"
+      flag_name <- substring(arg, 3) # Remove "--"
 
       # Convert kebab-case to snake_case
       param_name <- gsub("-", "_", flag_name)
@@ -1109,11 +1159,14 @@ gdal_job_run.default <- function(x, ...) {
 
         # Try to convert numeric values
         if (!grepl("[^0-9.-]", value)) {
-          tryCatch({
-            value <- as.numeric(value)
-          }, warning = function(w) {
-            # Keep as character if numeric conversion fails
-          })
+          tryCatch(
+            {
+              value <- as.numeric(value)
+            },
+            warning = function(w) {
+              # Keep as character if numeric conversion fails
+            }
+          )
         }
 
         kwargs[[param_name]] <- value
@@ -1283,7 +1336,7 @@ gdal_job_run.default <- function(x, ...) {
 #' @keywords internal
 #' @noRd
 .run_pipeline_with_checkpoint <- function(pipeline, checkpoint_dir, backend,
-                                         verbose = FALSE, ...) {
+                                          verbose = FALSE, ...) {
   # Create checkpoint directory
   if (!dir.exists(checkpoint_dir)) {
     dir.create(checkpoint_dir, recursive = TRUE, showWarnings = FALSE)
@@ -1301,7 +1354,8 @@ gdal_job_run.default <- function(x, ...) {
 
     if (verbose) {
       cli::cli_alert_info(
-        sprintf("Executing step %d of %d: %s",
+        sprintf(
+          "Executing step %d of %d: %s",
           i, length(pipeline$jobs),
           paste(c("gdal", job$command_path), collapse = " ")
         )
@@ -1363,7 +1417,7 @@ gdal_job_run.default <- function(x, ...) {
 #' @keywords internal
 #' @noRd
 .resume_pipeline <- function(pipeline, checkpoint_state, checkpoint_dir, backend,
-                            verbose = FALSE, ...) {
+                             verbose = FALSE, ...) {
   # Verify pipeline hash matches
   current_hash <- .compute_pipeline_hash(pipeline)
   if (current_hash != checkpoint_state$pipeline_id) {
@@ -1410,7 +1464,8 @@ gdal_job_run.default <- function(x, ...) {
 
     if (verbose) {
       cli::cli_alert_info(
-        sprintf("Executing step %d of %d: %s",
+        sprintf(
+          "Executing step %d of %d: %s",
           i, length(pipeline$jobs),
           paste(c("gdal", job$command_path), collapse = " ")
         )

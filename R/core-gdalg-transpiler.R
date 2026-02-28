@@ -28,7 +28,7 @@
 .quote_argument <- function(str) {
   # Characters that are safe without quoting (alphanumeric + common safe chars)
   # This covers most common filenames and simple arguments
-  if (grepl("^[a-zA-Z0-9/_.:=-]*$", str)) {
+  if (grepl("^[a-zA-Z0-9/_.:=-]+$", str)) {
     return(str)
   }
 
@@ -80,16 +80,16 @@
   # Handle logical/boolean arguments
   if (is.logical(value)) {
     if (value) {
-      return(cli_flag)  # Just the flag for TRUE
+      return(cli_flag) # Just the flag for TRUE
     } else {
-      return(character(0))  # Nothing for FALSE
+      return(character(0)) # Nothing for FALSE
     }
   }
 
   # Check if this is a composite (fixed-count, comma-separated) argument
   is_composite <- FALSE
   arg_meta <- arg_mapping[[arg_name]]
-  if (!is.null(arg_meta) && !is.null(arg_meta$min_count) && !is.null(arg_meta$max_count)) {
+  if (is.list(arg_meta) && !is.null(arg_meta$min_count) && !is.null(arg_meta$max_count)) {
     is_composite <- arg_meta$min_count == arg_meta$max_count && arg_meta$min_count > 1
   }
 
@@ -98,7 +98,7 @@
     if (is_composite) {
       # Composite: comma-separated
       formatted_values <- sapply(value, function(v) .quote_argument(as.character(v)), USE.NAMES = FALSE)
-      return(c(cli_flag, paste(formatted_values, collapse = ",")))
+      return(unname(c(cli_flag, paste(formatted_values, collapse = ","))))
     } else {
       # Repeatable: repeated flags
       formatted_values <- sapply(value, function(v) .quote_argument(as.character(v)), USE.NAMES = FALSE)
@@ -107,89 +107,13 @@
       for (val in formatted_values) {
         result <- c(result, cli_flag, val)
       }
-      return(result)
+      return(unname(result))
     }
   }
 
   # Single value: quote and return
   formatted_value <- .quote_argument(as.character(value))
-  c(cli_flag, formatted_value)
-}
-
-
-#' Convert a Single gdal_job to an RFC 104 CLI Step String
-#'
-#' Transforms a gdal_job object into a single step in an RFC 104 pipeline.
-#' This handles positional argument ordering and option formatting.
-#'
-#' @param job A gdal_job object
-#'
-#' @return Character string representing this job as a single RFC 104 CLI step
-#'   (without the "!" delimiter; that's added by the pipeline function).
-#'
-#' @keywords internal
-#' @noRd
-.job_to_rfc104_step <- function(job) {
-  # Extract command parts (skip "gdal" prefix if present)
-  command_parts <- if (length(job$command_path) > 0 && job$command_path[1] == "gdal") {
-    job$command_path[-1]
-  } else {
-    job$command_path
-  }
-
-  step_parts <- command_parts
-
-  # Separate positional and option arguments
-  positional_args_map <- list()
-  option_parts <- character()
-
-  arg_mapping <- if (!is.null(job$arg_mapping)) job$arg_mapping else list()
-
-  # Process each argument
-  for (arg_name in names(job$arguments)) {
-    arg_value <- job$arguments[[arg_name]]
-
-    if (is.null(arg_value)) {
-      next
-    }
-
-    # Check if this is a positional argument
-    positional_arg_names <- c("input", "output", "src_dataset", "dest_dataset", "dataset")
-    is_positional <- arg_name %in% positional_arg_names
-
-    if (is_positional) {
-      positional_args_map[[arg_name]] <- arg_value
-    } else {
-      # Format as option argument
-      formatted <- .format_rfc104_argument(arg_value, arg_name, arg_mapping)
-      option_parts <- c(option_parts, formatted)
-    }
-  }
-
-  # RFC 104 order: command step name [options] [positional args]
-  # For pipeline steps, the step name is the last part of command_path
-  # e.g., for c("raster", "convert"), step is "convert"
-  step_name <- if (length(command_parts) > 1) command_parts[length(command_parts)] else command_parts[1]
-
-  # For pipeline steps, don't include command hierarchy (raster/vector is implicit in pipeline type)
-  result <- c(step_name, option_parts)
-
-  # Add positional arguments in proper order: inputs first, then outputs
-  positional_order <- c("input", "src_dataset", "dataset", "output", "dest_dataset")
-  for (arg_name in positional_order) {
-    if (arg_name %in% names(positional_args_map)) {
-      arg_value <- positional_args_map[[arg_name]]
-      if (length(arg_value) > 1) {
-        formatted_values <- sapply(arg_value, function(v) .quote_argument(as.character(v)), USE.NAMES = FALSE)
-        result <- c(result, formatted_values)
-      } else {
-        result <- c(result, .quote_argument(as.character(arg_value)))
-      }
-    }
-  }
-
-  # Join into a single space-separated string
-  paste(result, collapse = " ")
+  unname(c(cli_flag, formatted_value))
 }
 
 
@@ -199,7 +123,9 @@
 #' command string using the "!" delimiter between steps.
 #'
 #' This handles both raster and vector pipelines and produces output suitable
-#' for embedding in a GDALG JSON "command_line" field.
+#' for embedding in a GDALG JSON "command_line" field. Intermediate file
+#' links (positional arguments) are stripped as per RFC 104 stream semantics,
+#' and explicit `read`/`write` steps are prepended/appended if necessary.
 #'
 #' @param pipeline A gdal_pipeline object
 #'
@@ -218,18 +144,122 @@
 
   # Determine pipeline type (raster or vector) from first job's command path
   first_job <- pipeline$jobs[[1]]
-  pipeline_type <- if (first_job$command_path[1] == "gdal") {
+  pipeline_type <- if (length(first_job$command_path) > 1 && first_job$command_path[1] == "gdal") {
     first_job$command_path[2]
-  } else {
+  } else if (length(first_job$command_path) > 0) {
     first_job$command_path[1]
+  } else {
+    "raster" # Default fail-safe
   }
 
   if (!(pipeline_type %in% c("raster", "vector"))) {
     stop("Cannot determine pipeline type (raster or vector) from first job", call. = FALSE)
   }
 
-  # Convert each job to a step string
-  step_strings <- sapply(pipeline$jobs, .job_to_rfc104_step, USE.NAMES = FALSE)
+  step_strings <- character()
+
+  for (i in seq_along(pipeline$jobs)) {
+    job <- pipeline$jobs[[i]]
+    is_first <- (i == 1)
+    is_last <- (i == length(pipeline$jobs))
+
+    # Extract command parts (skip "gdal" prefix if present)
+    command_parts <- if (length(job$command_path) > 0 && job$command_path[1] == "gdal") {
+      job$command_path[-1]
+    } else {
+      job$command_path
+    }
+
+    module <- if (length(command_parts) > 1) command_parts[1] else "raster"
+    operation <- if (length(command_parts) > 1) command_parts[length(command_parts)] else command_parts[1]
+
+    step_name <- .get_step_mapping(module, operation)
+
+    # Separate positional and option arguments
+    positional_args_map <- list()
+    option_parts <- character()
+
+    arg_mapping <- if (!is.null(job$arg_mapping)) job$arg_mapping else list()
+
+    for (arg_name in names(job$arguments)) {
+      arg_value <- job$arguments[[arg_name]]
+
+      if (is.null(arg_value)) {
+        next
+      }
+
+      positional_arg_names <- c("input", "output", "src_dataset", "dest_dataset", "dataset")
+      is_positional <- arg_name %in% positional_arg_names
+
+      if (is_positional) {
+        positional_args_map[[arg_name]] <- arg_value
+      } else {
+        formatted <- .format_rfc104_argument(arg_value, arg_name, arg_mapping)
+        option_parts <- c(option_parts, formatted)
+      }
+    }
+
+    # Prepend explicit read step if first job contains an input but isn't a read step
+    if (is_first && step_name != "read") {
+      input_val <- NULL
+      for (arg in c("input", "src_dataset", "dataset")) {
+        if (!is.null(positional_args_map[[arg]])) {
+          input_val <- positional_args_map[[arg]]
+          break
+        }
+      }
+      if (!is.null(input_val)) {
+        if (length(input_val) > 1) {
+          formatted_inputs <- sapply(input_val, function(v) .quote_argument(as.character(v)), USE.NAMES = FALSE)
+          step_strings <- c(step_strings, paste(c("read", formatted_inputs), collapse = " "))
+        } else {
+          step_strings <- c(step_strings, paste("read", .quote_argument(as.character(input_val))))
+        }
+      }
+    }
+
+    # Build the current step. Exclude positional input/output files UNLESS it's explicitly read/write
+    result <- c(step_name, option_parts)
+
+    if (step_name == "read") {
+      for (arg in c("input", "src_dataset", "dataset")) {
+        if (!is.null(positional_args_map[[arg]])) {
+          val <- positional_args_map[[arg]]
+          result <- c(result, if (length(val) > 1) sapply(val, function(v) .quote_argument(as.character(v))) else .quote_argument(as.character(val)))
+          break
+        }
+      }
+    } else if (step_name == "write") {
+      for (arg in c("output", "dest_dataset")) {
+        if (!is.null(positional_args_map[[arg]])) {
+          val <- positional_args_map[[arg]]
+          result <- c(result, if (length(val) > 1) sapply(val, function(v) .quote_argument(as.character(v))) else .quote_argument(as.character(val)))
+          break
+        }
+      }
+    }
+
+    step_strings <- c(step_strings, paste(result, collapse = " "))
+
+    # Append explicit write step if last job contains an output but isn't a write step
+    if (is_last && step_name != "write") {
+      output_val <- NULL
+      for (arg in c("output", "dest_dataset")) {
+        if (!is.null(positional_args_map[[arg]])) {
+          output_val <- positional_args_map[[arg]]
+          break
+        }
+      }
+      if (!is.null(output_val)) {
+        if (length(output_val) > 1) {
+          formatted_outputs <- sapply(output_val, function(v) .quote_argument(as.character(v)), USE.NAMES = FALSE)
+          step_strings <- c(step_strings, paste(c("write", formatted_outputs), collapse = " "))
+        } else {
+          step_strings <- c(step_strings, paste("write", .quote_argument(as.character(output_val))))
+        }
+      }
+    }
+  }
 
   # Join with "!" delimiter
   steps_combined <- paste(step_strings, collapse = " ! ")
@@ -326,19 +356,19 @@
     # 1. Find all quoted strings andmark their positions
     # 2. Split the rest by whitespace
     # 3. Reassemble
-    
+
     # For now, use a simpler grepl-based approach that's more reliable
     # This regex matches either single-quoted strings or sequences of non-whitespace
-    pattern <- "(['\"][^'\"]*['\"]|[^ \\t]+)"
-    
+    pattern <- "(['\"][^'\"]*['\"]|\\S+)"
+
     # Use gregexpr with the ENTIRE result to pass to regmatches
     matches <- gregexpr(pattern, step_str)
-    
+
     if (matches[[1]][1] == -1) {
       # No matches, return emptycharacter vector
       return(character(0))
     }
-    
+
     matched <- regmatches(step_str, matches)[[1]]
 
     # Remove quotes from quoted tokens
@@ -350,7 +380,6 @@
   # Remove empty steps
   steps[sapply(steps, length) > 0]
 }
-
 
 
 #' Reconstruct a gdal_job from RFC 104 Step Tokens
@@ -462,7 +491,7 @@
       stream_in = NULL,
       stream_out_format = NULL,
       pipeline = NULL,
-      arg_mapping = list()  # Empty; would need to be fetched from API spec if needed
+      arg_mapping = list() # Empty; would need to be fetched from API spec if needed
     ),
     class = "gdal_job"
   )

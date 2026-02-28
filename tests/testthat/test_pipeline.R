@@ -48,7 +48,7 @@ test_that("serialize_gdal_job handles argument ordering correctly", {
   burn_idx <- which(args == "--burn")
   resolution_idx <- which(args == "--resolution")
 
-  expect_true(burn_idx < 7)  # Before positional args
+  expect_true(burn_idx < 7) # Before positional args
   expect_true(resolution_idx < 7)
 })
 
@@ -92,11 +92,11 @@ test_that("pipeline connections work correctly", {
     output = "temp.gpkg",
     dst_crs = "EPSG:4326"
   ) |>
-  gdal_vector_rasterize(
-    output = "output.tif",
-    burn = 1,
-    resolution = c(10, 10)
-  )
+    gdal_vector_rasterize(
+      output = "output.tif",
+      burn = 1,
+      resolution = c(10, 10)
+    )
 
   # Check that the rasterize job has input set to temp.gpkg
   pipeline <- job$pipeline
@@ -112,10 +112,10 @@ test_that("pipeline uses temp files for connections when needed", {
     output = "temp.gpkg",
     dst_crs = "EPSG:4326"
   ) |>
-  gdal_vector_rasterize(
-    output = "output.tif",
-    burn = 1
-  )
+    gdal_vector_rasterize(
+      output = "output.tif",
+      burn = 1
+    )
 
   pipeline <- job$pipeline
   rasterize_job <- pipeline$jobs[[2]]
@@ -153,10 +153,10 @@ test_that("pipeline with virtual paths doesn't override user outputs", {
     output = "user_output.gpkg",
     dst_crs = "EPSG:4326"
   ) |>
-  gdal_vector_rasterize(
-    output = "user_raster.tif",
-    burn = 1
-  )
+    gdal_vector_rasterize(
+      output = "user_raster.tif",
+      burn = 1
+    )
 
   pipeline <- job$pipeline
 
@@ -390,17 +390,23 @@ test_that("native pipeline rendering skips input/output in intermediate steps", 
   # Split by '!' to get individual pipeline steps
   steps <- strsplit(native_cmd, "!")[[1]]
   reproject_steps <- steps[grepl("reproject", steps)]
-  
+
   # No reproject step should contain --input
   for (step in reproject_steps) {
-    expect_false(grepl("--input", step), 
-                 info = paste("Reproject step contains --input:", step))
+    expect_false(grepl("--input", step),
+      info = paste("Reproject step contains --input:", step)
+    )
   }
-  
-  # The final write step should have --input (connecting to the last intermediate step)
+
+  # The final write step should NOT have --input anymore because it's streaming
+  # It should just be "write output.tif"
   write_steps <- steps[grepl("write", steps)]
-  expect_true(any(grepl("--input", write_steps)), 
-              info = "Write step should contain --input")
+  expect_false(any(grepl("--input", write_steps)),
+    info = "Write step should NOT contain --input in streaming mode"
+  )
+  expect_true(any(grepl("output.tif", write_steps)),
+    info = "Write step should contain the output filename"
+  )
 })
 
 # ============================================================================

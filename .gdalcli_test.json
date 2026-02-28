@@ -1,0 +1,114 @@
+{
+  "gdalg": {
+    "type": [
+      "gdal_streamed_alg"
+    ],
+    "command_line": [
+      "gdal raster pipeline ! read /home/andrew/workspace/gdalcli/inst/extdata/sample_clay_content.tif ! reproject --dst-crs EPSG:32632 ! scale --src-min 0 --src-max 100 --dst-min 0 --dst-max 255 ! write --output-format COG /tmp/RtmpuCnCk7/file3d93a74244975.tif"
+    ],
+    "relative_paths_relative_to_this_file": [
+      true
+    ]
+  },
+  "metadata": {
+    "format_version": [
+      "1.0"
+    ],
+    "gdalcli_version": [
+      "0.5.0"
+    ],
+    "gdal_version_required": [
+      "3.11"
+    ],
+    "pipeline_name": [
+      null
+    ],
+    "pipeline_description": [
+      null
+    ],
+    "created_at": [
+      "2026-02-28T08:40:54Z"
+    ],
+    "created_by_r_version": [
+      "R version 4.5.2 (2025-10-31)"
+    ],
+    "custom_tags": []
+  },
+  "r_job_specs": [
+    {
+      "command_path": [
+        "raster",
+        "reproject"
+      ],
+      "arguments": {
+        "input": [
+          "/home/andrew/workspace/gdalcli/inst/extdata/sample_clay_content.tif"
+        ],
+        "dst_crs": [
+          "EPSG:32632"
+        ],
+        "output": [
+          "/vsimem/gdalcli_3d93a19e069c6.tif"
+        ]
+      },
+      "arg_mapping": [],
+      "config_options": [],
+      "env_vars": [],
+      "stream_in": [],
+      "stream_out_format": []
+    },
+    {
+      "command_path": [
+        "raster",
+        "scale"
+      ],
+      "arguments": {
+        "src_min": [
+          0.0
+        ],
+        "src_max": [
+          100.0
+        ],
+        "dst_min": [
+          0.0
+        ],
+        "dst_max": [
+          255.0
+        ],
+        "output": [
+          "/vsimem/gdalcli_3d93a38de85b8.tif"
+        ],
+        "input": [
+          "/vsimem/gdalcli_3d93a19e069c6.tif"
+        ]
+      },
+      "arg_mapping": [],
+      "config_options": [],
+      "env_vars": [],
+      "stream_in": [],
+      "stream_out_format": []
+    },
+    {
+      "command_path": [
+        "raster",
+        "convert"
+      ],
+      "arguments": {
+        "output": [
+          "/tmp/RtmpuCnCk7/file3d93a74244975.tif"
+        ],
+        "output_format": [
+          "COG"
+        ],
+        "input": [
+          "/vsimem/gdalcli_3d93a38de85b8.tif"
+        ]
+      },
+      "arg_mapping": [],
+      "config_options": [],
+      "env_vars": [],
+      "stream_in": [],
+      "stream_out_format": []
+    }
+  ]
+}

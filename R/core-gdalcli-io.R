@@ -99,33 +99,45 @@
   # Check file existence
   if (file.exists(path) && !overwrite) {
     stop("File already exists: ", path,
-         " (set overwrite = TRUE to overwrite)", call. = FALSE)
+      " (set overwrite = TRUE to overwrite)",
+      call. = FALSE
+    )
   }
 
   # Convert pipeline to hybrid gdalcli spec
   spec <- as_gdalcli_spec(pipeline,
-                          name = name,
-                          description = description,
-                          custom_tags = custom_tags)
+    name = name,
+    description = description,
+    custom_tags = custom_tags
+  )
 
   # Convert to list for JSON serialization
   spec_list <- gdalcli_spec_to_list(spec)
 
   # Serialize to JSON
-  json_str <- tryCatch({
-    yyjsonr::write_json_str(spec_list, pretty = pretty)
-  }, error = function(e) {
-    stop("Failed to serialize pipeline to JSON: ", conditionMessage(e),
-         call. = FALSE)
-  })
+  json_str <- tryCatch(
+    {
+      yyjsonr::write_json_str(spec_list, pretty = pretty)
+    },
+    error = function(e) {
+      stop("Failed to serialize pipeline to JSON: ", conditionMessage(e),
+        call. = FALSE
+      )
+    }
+  )
 
   # Write to file
-  tryCatch({
-    writeLines(json_str, path)
-  }, error = function(e) {
-    stop("Failed to write pipeline file: ", path, "\n",
-         "  Error: ", conditionMessage(e), call. = FALSE)
-  })
+  tryCatch(
+    {
+      writeLines(json_str, path)
+    },
+    error = function(e) {
+      stop("Failed to write pipeline file: ", path, "\n",
+        "  Error: ", conditionMessage(e),
+        call. = FALSE
+      )
+    }
+  )
 
   if (verbose) {
     message("Saved gdalcli pipeline to ", path)
@@ -160,13 +172,24 @@
   }
 
   # Read and parse JSON
-  spec <- tryCatch({
-    json_text <- readLines(path, warn = FALSE)
-    yyjsonr::read_json_str(paste(json_text, collapse = ""))
-  }, error = function(e) {
-    stop("Failed to parse pipeline JSON file: ", path, "\n",
-         "  Error: ", conditionMessage(e), call. = FALSE)
-  })
+  spec <- tryCatch(
+    {
+      json_text <- readLines(path, warn = FALSE)
+      yyjsonr::read_json_str(
+        paste(json_text, collapse = ""),
+        opts = yyjsonr::opts_read_json(
+          arr_of_objs_to_df = FALSE,
+          obj_of_arrs_to_df = FALSE
+        )
+      )
+    },
+    error = function(e) {
+      stop("Failed to parse pipeline JSON file: ", path, "\n",
+        "  Error: ", conditionMessage(e),
+        call. = FALSE
+      )
+    }
+  )
 
   if (!is.list(spec)) {
     stop("Pipeline JSON must be an object/list", call. = FALSE)
@@ -177,21 +200,32 @@
 
   if (format == "hybrid") {
     # Load hybrid format - create gdalcli_spec and convert to pipeline
-    tryCatch({
-      # Convert loaded list back to pipeline via transpiler
-      .gdalcli_spec_to_pipeline(spec)
-    }, error = function(e) {
-      stop("Failed to reconstruct pipeline from spec: ",
-           conditionMessage(e), call. = FALSE)
-    })
+    tryCatch(
+      {
+        # Convert loaded list back to pipeline via transpiler
+        .gdalcli_spec_to_pipeline(spec)
+      },
+      error = function(e) {
+        stop("Failed to reconstruct pipeline from spec: ",
+          conditionMessage(e),
+          call. = FALSE
+        )
+      }
+    )
   } else if (format == "pure_gdalg") {
     # Load pure GDALG format
-    tryCatch({
-      .gdalcli_spec_to_pipeline(spec)
-    }, error = function(e) {
-      stop("Failed to reconstruct pipeline from GDALG: ",
-           conditionMessage(e), call. = FALSE)
-    })
+    tryCatch(
+      {
+        wrapped_spec <- list(gdalg = spec, metadata = list(), r_job_specs = list())
+        .gdalcli_spec_to_pipeline(wrapped_spec)
+      },
+      error = function(e) {
+        stop("Failed to reconstruct pipeline from GDALG: ",
+          conditionMessage(e),
+          call. = FALSE
+        )
+      }
+    )
   } else if (format == "legacy") {
     # Legacy format not supported
     stop(
