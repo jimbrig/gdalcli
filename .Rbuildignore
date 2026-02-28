@@ -28,3 +28,5 @@ build/
 ^scratch$
 ^venv$
 ^venv/
+^.*\.Rcheck$
+^.*\.tar\.gz$

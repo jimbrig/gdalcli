@@ -111,7 +111,7 @@ gdal_job_run(pipeline)
 ```{r}
 # Save pipeline to gdalcli pipeline format
 workflow_file <- tempfile(fileext = ".gdalcli.json")
-gdal_save_pipeline(pipeline, workflow_file, name = "Example Pipeline")
+gdal_save_pipeline(pipeline, workflow_file)
 
 # Load pipeline for later use
 loaded <- gdal_load_pipeline(workflow_file)
@@ -119,9 +119,10 @@ loaded <- gdal_load_pipeline(workflow_file)
 
 ### Cloud Storage
 
-```{r, eval=FALSE}
+```{r}
 # Set AWS credentials (from environment variables)
-auth <- gdal_auth_s3()
+# We use no_sign_request for public bucket access in this example
+auth <- gdal_auth_s3(no_sign_request = TRUE)
 
 job <- gdal_raster_convert(
   input = "/vsis3/my-bucket/input.tif",
@@ -130,7 +131,7 @@ job <- gdal_raster_convert(
 ) |>
   gdal_with_env(auth)
 
-gdal_job_run(job)
+print(job)
 ```
 
 ### Raster Information
@@ -145,7 +146,7 @@ gdal_job_run(info_job)
 
 ### Vector Operations
 
-```{r, eval=FALSE}
+```{r}
 # Convert vector format
 vector_job <- gdal_vector_convert(
   input = system.file("extdata/sample_mapunit_polygons.gpkg", package = "gdalcli"),
@@ -157,7 +158,7 @@ gdal_job_run(vector_job, backend = "processx")
 
 ### Raster Processing Pipeline
 
-```{r, eval=FALSE}
+```{r}
 # Simple processing pipeline: reproject and convert
 processing_pipeline <- gdal_raster_reproject(
   input = system.file("extdata/sample_clay_content.tif", package = "gdalcli"),
@@ -213,7 +214,7 @@ gdalcli_options(backend = "processx")
 
 Execute multi-step workflows as a single GDAL pipeline:
 
-```{r, eval=FALSE}
+```{r}
 pipeline <- gdal_raster_reproject(
   input = system.file("extdata/sample_clay_content.tif", package = "gdalcli"),
   dst_crs = "EPSG:32632"
@@ -236,9 +237,7 @@ Persist pipelines as JSON for sharing and version control. gdalcli supports thre
 workflow_file <- tempfile(fileext = ".gdalcli.json")
 gdal_save_pipeline(
   pipeline,
-  workflow_file,
-  name = "Reproject and Scale",
-  description = "Reproject to UTM Zone 32N and scale to 0-255"
+  workflow_file
 )
 
 # Load pipeline for later use (auto-detects format)
@@ -246,7 +245,8 @@ loaded <- gdal_load_pipeline(workflow_file)
 
 # Export as pure GDALG for use with other GDAL tools
 gdalg <- as_gdalg(loaded)
-gdalg_write(gdalg, "workflow.gdalg.json")
+gdalg_file <- tempfile(fileext = ".gdalg.json")
+gdalg_write(gdalg, gdalg_file)
 ```
 
 ### Shell Script Generation
@@ -271,6 +271,14 @@ cat(script)
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## License
+## License and Copyrights
 
-MIT License - see LICENSE file for details
+`gdalcli` is released up the MIT License - see LICENSE file for details.
+
+### Acknowledgments
+
+This package serves as a frontend to the GDAL command-line utilities. Function arguments, descriptions, and much of the embedded documentation within `gdalcli` are derived directly from the official GDAL documentation.
+
+We gratefully acknowledge the GDAL/OGR development team and contributors.
+
+See the `LICENSE.md` file for the full GDAL license attribution.

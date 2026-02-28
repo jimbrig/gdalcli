@@ -14,3 +14,5 @@ scratch/
 .Rproj.user
 *.Rproj
 *.Rhistory
+*.Rcheck/
+*.tar.gz

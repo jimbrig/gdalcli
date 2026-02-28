@@ -116,7 +116,7 @@ gdal_job_run(pipeline)
 ``` r
 # Save pipeline to gdalcli pipeline format
 workflow_file <- tempfile(fileext = ".gdalcli.json")
-gdal_save_pipeline(pipeline, workflow_file, name = "Example Pipeline")
+gdal_save_pipeline(pipeline, workflow_file)
 
 # Load pipeline for later use
 loaded <- gdal_load_pipeline(workflow_file)
@@ -126,7 +126,8 @@ loaded <- gdal_load_pipeline(workflow_file)
 
 ``` r
 # Set AWS credentials (from environment variables)
-auth <- gdal_auth_s3()
+# We use no_sign_request for public bucket access in this example
+auth <- gdal_auth_s3(no_sign_request = TRUE)
 
 job <- gdal_raster_convert(
   input = "/vsis3/my-bucket/input.tif",
@@ -135,7 +136,15 @@ job <- gdal_raster_convert(
 ) |>
   gdal_with_env(auth)
 
-gdal_job_run(job)
+print(job)
+#> <gdal_job>
+#> Command:  gdal raster convert 
+#> Arguments:
+#>   input: /vsis3/my-bucket/input.tif
+#>   output: /vsis3/my-bucket/output.tif
+#>   --output_format: COG
+#> Environment Variables:
+#>   AWS_NO_SIGN_REQUEST=YES
 ```
 
 ### Raster Information
@@ -171,6 +180,8 @@ processing_pipeline <- gdal_raster_reproject(
   gdal_raster_convert(output = tempfile(fileext = ".tif"))
 
 gdal_job_run(processing_pipeline, backend = "processx")
+#> 0...10...20...30...40...50...60...70...80...90...100 - done.
+#> 0...10...20...30...40...50...60...70...80...90...100 - done.
 ```
 
 ## Backends
@@ -227,6 +238,8 @@ pipeline <- gdal_raster_reproject(
   gdal_raster_convert(output = tempfile(fileext = ".tif"))
 
 gdal_job_run(pipeline, backend = "processx")
+#> 0...10...20...30...40...50...60...70...80...90...100 - done.
+#> 0...10...20...30...40...50...60...70...80...90...100 - done.
 ```
 
 ### gdalcli Pipeline Format: Save and Load Pipelines
@@ -245,9 +258,7 @@ supports three formats:
 workflow_file <- tempfile(fileext = ".gdalcli.json")
 gdal_save_pipeline(
   pipeline,
-  workflow_file,
-  name = "Reproject and Scale",
-  description = "Reproject to UTM Zone 32N and scale to 0-255"
+  workflow_file
 )
 
 # Load pipeline for later use (auto-detects format)
@@ -255,7 +266,8 @@ loaded <- gdal_load_pipeline(workflow_file)
 
 # Export as pure GDALG for use with other GDAL tools
 gdalg <- as_gdalg(loaded)
-gdalg_write(gdalg, "workflow.gdalg.json")
+gdalg_file <- tempfile(fileext = ".gdalg.json")
+gdalg_write(gdalg, gdalg_file)
 ```
 
 ### Shell Script Generation
@@ -271,7 +283,7 @@ cat(script)
 #> set -e
 #> 
 #> # Native GDAL pipeline execution
-#> gdal raster pipeline ! read /home/andrew/R/x86_64-pc-linux-gnu-library/4.5/gdalcli/extdata/sample_clay_content.tif ! reproject --dst-crs EPSG:32632 --output /vsimem/gdalcli_9860c6c83523c.tif ! scale --src-min 0 --src-max 100 --dst-min 0 --dst-max 255 ! write /tmp/Rtmpw8bD5X/file9860c5ba69099.tif --input /vsimem/gdalcli_9860c372bd35c.tif
+#> gdal raster pipeline ! read /home/andrew/R/x86_64-pc-linux-gnu-library/4.5/gdalcli/extdata/sample_clay_content.tif ! reproject --dst-crs EPSG:32632 --output /vsimem/gdalcli_36adf3439ef86.tif ! write /tmp/RtmpwcIhIw/file36adf499ef31e.tif --input /vsimem/gdalcli_36adf3439ef86.tif
 ```
 
 ## Architecture
@@ -289,6 +301,17 @@ cat(script)
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md)
 for guidelines.
 
-## License
+## License and Copyrights
 
-MIT License - see LICENSE file for details
+`gdalcli` is released up the MIT License - see LICENSE file for details.
+
+### Acknowledgments
+
+This package serves as a frontend to the GDAL command-line utilities.
+Function arguments, descriptions, and much of the embedded documentation
+within `gdalcli` are derived directly from the official GDAL
+documentation.
+
+We gratefully acknowledge the GDAL development team and contributors.
+
+See the `LICENSE.md` file for the full GDAL license attribution.
