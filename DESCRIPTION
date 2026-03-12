@@ -1,6 +1,6 @@
 Package: gdalcli
 Title: Frontend for the GDAL (>= 3.11) CLI
-Version: 0.5.0-3.12.2
+Version: 0.6.0-3.12.2
 Authors@R:
     person("Andrew", "Brown", , "brown.andrewg@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-4565-533X"))
