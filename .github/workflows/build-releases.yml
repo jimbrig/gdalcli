@@ -75,16 +75,6 @@ jobs:
             exit 1
           fi
 
-          # Validate version exists in versions.json (if file exists)
-          if [ -f .github/versions.json ]; then
-            SUPPORTED=$(jq -r '.supported[]' .github/versions.json)
-            if ! echo "$SUPPORTED" | grep -q "^${VERSION}$"; then
-              echo "WARNING: Version $VERSION not in supported list from .github/versions.json"
-              echo "Supported versions: $(echo $SUPPORTED | tr '\n' ', ')"
-              echo "Proceeding anyway (you can add it to versions.json if this is new)"
-            fi
-          fi
-
           # Extract package version from DESCRIPTION
           PKG_VERSION=$(grep "^Version:" DESCRIPTION | sed 's/Version: //')
           
@@ -204,7 +194,7 @@ jobs:
         run: |
           GDAL_VERSION="${{ needs.validate.outputs.gdal_version }}"
           IMAGE="ghcr.io/${{ github.repository }}:gdal-${GDAL_VERSION}-latest"
-          
+
           # Generate API and documentation inside Docker where GDAL is available
           docker run --rm \
             -v "$PWD:/workspace" \
@@ -212,19 +202,42 @@ jobs:
             "$IMAGE" \
             bash -c "
               set -e
-              
+
               echo 'Generating GDAL API in workspace...'
               Rscript /workspace/build/generate_gdal_api.R
-              
-              echo 'Generating documentation...'
+
+              echo 'Generating documentation and NAMESPACE...'
               Rscript -e 'roxygen2::roxygenise()'
-              
+
+              # Validate that NAMESPACE was regenerated and all exports are defined
+              echo ''
+              echo 'Validating NAMESPACE...'
+              Rscript -e '
+                library(roxygen2)
+                # Check if any exports are undefined
+                ns <- getNamespace(\"gdalcli\")
+                exports <- getNamespaceExports(ns)
+                missing <- character()
+                for (exp in exports) {
+                  if (!exists(exp, envir = ns)) {
+                    missing <- c(missing, exp)
+                  }
+                }
+                if (length(missing) > 0) {
+                  cat(\"ERROR: Undefined exports found:\\n\")
+                  print(missing)
+                  quit(status = 1)
+                } else {
+                  cat(\"✓ All exports are defined\\n\")
+                }
+              '
+
               # Run checks on the generated package
               echo 'Running R CMD check...'
               R CMD check --no-manual --compact-vignettes=gs+qpdf /workspace 2>&1 | tail -50 || {
                 echo 'WARNING: R CMD check had issues, but continuing...'
               }
-              
+
               # Show generated files
               echo ''
               echo 'Generated files summary:'
@@ -232,14 +245,14 @@ jobs:
               echo \"Rd files: \$(ls -1 /workspace/man/*.Rd 2>/dev/null | wc -l)\"
               test -f /workspace/NAMESPACE && echo 'NAMESPACE: OK' || echo 'NAMESPACE: MISSING'
             "
-          
+
           # Verify files exist in workspace (should be source .R files, not binaries)
           echo ""
           echo "Verifying generated files in workspace..."
           test -d R && ls -lh R/*.R 2>/dev/null | head -3 || echo "✗ R/ missing source files!"
           test -d man && echo "✓ man/ directory exists ($(ls -1 man/*.Rd 2>/dev/null | wc -l) files)" || echo "✗ man/ directory missing!"
           test -f NAMESPACE && echo "✓ NAMESPACE exists" || echo "✗ NAMESPACE missing!"
-          
+
           # Sanity check: no binary files should be staged
           if [ -f R/gdalcli ] || [ -f R/gdalcli.rdb ]; then
             echo "ERROR: Binary package files detected in R/ - these should not be staged!"
@@ -253,69 +266,51 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
-          GDAL_VERSION="${{ needs.validate.outputs.gdal_version }}"
           BRANCH="${{ needs.validate.outputs.branch_name }}"
-          GDAL_SHORT="${{ needs.validate.outputs.gdal_short }}"
 
           # Clean up R check directory with restricted permissions before stashing
           echo "Cleaning up build artifacts..."
           sudo rm -rf workspace.Rcheck 2>/dev/null || rm -rf workspace.Rcheck
 
-          # Stash any uncommitted changes BEFORE checkout (including untracked generated files)
+          # Stash any uncommitted changes (including untracked generated files)
           echo "Stashing generated files and changes..."
-          git stash push -u -m "temp: generated files for $BRANCH (GDAL $GDAL_VERSION)"
+          git stash push -u -m "temp: generated files for $BRANCH"
 
-          # Determine if this is a patch version of an existing minor version
-          # or a new minor version release
-          IS_PATCH_VERSION=false
-
-          echo "Checking if branch $BRANCH exists in remote..."
-          git fetch origin
+          # Fetch latest main and prepare branch
+          git fetch origin main
 
           if git rev-parse --verify origin/$BRANCH 2>/dev/null; then
-            echo "Release branch exists: $BRANCH"
-            echo "This is a patch version release (e.g., updating 3.12.0 -> 3.12.1)"
-            IS_PATCH_VERSION=true
-
-            # For patch version: checkout existing branch and continue from it
-            # This preserves prior work for earlier patches
-            echo "Checking out existing release branch..."
+            # Existing release branch: merge latest main into it
             git checkout -b $BRANCH origin/$BRANCH
+            echo "Merging latest main branch into release branch..."
+            git merge --no-edit origin/main || {
+              # If merge conflicts exist, resolve by taking main version for documentation files
+              # (these will be immediately overwritten by stash pop with freshly generated docs)
+              echo "Merge conflicts detected, resolving..."
+              git diff --name-only --diff-filter=U | while read file; do
+                if [[ $file == man/* ]] || [[ $file == NAMESPACE ]] || [[ $file == DESCRIPTION ]]; then
+                  git checkout --theirs "$file"
+                  git add "$file"
+                elif [[ $file == R/* ]]; then
+                  # For R files, prefer ours (release branch) but log the conflict
+                  echo "Keeping release branch version of $file"
+                  git add "$file"
+                fi
+              done
+              git commit --no-edit -m "Merge main into $BRANCH (auto-resolved conflicts)"
+            }
           else
-            echo "Release branch does not exist: $BRANCH"
-            echo "This is a new minor version release (e.g., first 3.12.x)"
-
-            # For new minor version: create branch from main
-            echo "Creating new release branch from main..."
-            git fetch origin main
+            # New release branch: start from main
             git checkout -b $BRANCH origin/main
           fi
 
-          # For new minor version only: reset to main to get latest base code
-          if [ "$IS_PATCH_VERSION" = false ]; then
-            echo "New minor version: resetting to main base..."
-            git fetch origin main
-            git reset --hard origin/main
-          else
-            echo "Patch version: continuing on existing branch without reset"
-          fi
-
           # Restore the stashed changes (generated files)
-          # Conflicts are expected for patch versions where old generated files exist on the branch
+          # This must succeed or the workflow should fail
           echo "Restoring generated files..."
-          if ! git stash pop --index; then
-            echo "Merge conflicts detected (expected for patch versions)"
-            echo "Resolving conflicts by taking stashed version (newly generated files)..."
-
-            # Take the stashed version for all conflicted files
-            git diff --name-only --diff-filter=U | while read file; do
-              git checkout --theirs "$file" && git add "$file"
-            done
-
-            echo "Conflict resolution complete"
-          fi
+          git stash pop
 
       - name: Update DESCRIPTION
+        if: github.event.inputs.dry_run == 'false'
         run: |
           GDAL_VERSION="${{ needs.validate.outputs.gdal_version }}"
           PKG_VERSION="${{ needs.validate.outputs.package_version }}"
@@ -326,6 +321,7 @@ jobs:
           # Update SystemRequirements field
           sed -i "s/^SystemRequirements:.*/SystemRequirements: GDAL (>= ${GDAL_VERSION})/" DESCRIPTION
 
+          echo "Updated DESCRIPTION:"
           cat DESCRIPTION | grep -E "^Version:|^SystemRequirements:"
 
       - name: Update version info and commit release
@@ -345,7 +341,10 @@ jobs:
           R_VERSION=$(docker run --rm "$IMAGE" R --version 2>/dev/null | head -1 | sed 's/R version \([0-9.]*\).*/\1/')
           PROCESSX_VERSION=$(docker run --rm "$IMAGE" Rscript --slave -e "cat(as.character(packageVersion('processx')))" 2>/dev/null || echo "unknown")
           YYJSONR_VERSION=$(docker run --rm "$IMAGE" Rscript --slave -e "cat(as.character(packageVersion('yyjsonr')))" 2>/dev/null || echo "unknown")
-          
+
+          # Ensure inst/ directory exists
+          mkdir -p inst
+
           cat > inst/GDAL_VERSION_INFO.json <<EOF
           {
             "generated_at": "$GENERATED_AT",
@@ -402,6 +401,7 @@ jobs:
           
           if ! git diff --cached --quiet; then
             git commit -m "Release: gdalcli for GDAL $GDAL_VERSION"
+            # Force push is safe here because we've reset branch to main and applied generated files
             git push origin ${{ needs.validate.outputs.branch_name }} --force
           else
             echo "No changes to commit"
