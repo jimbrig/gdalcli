@@ -1,3 +1,13 @@
+# gdalcli 0.5.1 (2026-03-18)
+
+- Fixed release branch build workflow NAMESPACE consistency across GDAL versions
+- Improved CI version detection for latest GDAL deps image
+
+# gdalcli 0.5.0 (2026-02-12)
+
+- Major GDALG architectural improvements (#7): refactored core modules, enhanced pipeline composition and execution
+
+
 # gdalcli 0.4.1 (2026-01-28)
 
 - Added `gdalcli_options()` function for managing package options (backend, verbose, stream_out_format, audit_logging)
