@@ -415,7 +415,7 @@ jobs:
             RELEASE_INFO="Yes (${{ needs.validate.outputs.tag_name }})"
           fi
 
-          cat >> $GITHUB_STEP_SUMMARY <<'EOF'
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
           ## Build Summary
 
           | Item | Value |
@@ -425,6 +425,17 @@ jobs:
           | Release Branch | `${{ needs.validate.outputs.branch_name }}` |
           | Docker Image | `ghcr.io/${{ github.repository }}:gdal-${{ needs.validate.outputs.gdal_version }}-latest` |
           | Build Status | ${{ job.status }} |
-          | GitHub Release | ${RELEASE_INFO} |
+          | GitHub Release | RELEASE_PLACEHOLDER |
           | Dry Run | ${{ github.event.inputs.dry_run }} |
           EOF
+
+          sed -i "s|RELEASE_PLACEHOLDER|$RELEASE_INFO|g" $GITHUB_STEP_SUMMARY
+
+      - name: Upload R CMD check log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rcheck-log-gdal-${{ needs.validate.outputs.gdal_version }}
+          path: workspace.Rcheck/
+          retention-days: 30
+          if-no-files-found: ignore
