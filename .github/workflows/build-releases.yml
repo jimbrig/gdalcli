@@ -272,9 +272,12 @@ jobs:
               '
 
               echo 'Running R CMD check...'
-              R CMD check --no-manual --compact-vignettes=gs+qpdf /workspace 2>&1 | tail -50 || {
-                echo 'WARNING: R CMD check had issues, but continuing...'
-              }
+              R CMD check --no-manual --compact-vignettes=gs+qpdf /workspace 2>&1 | tee /tmp/rcmdcheck.out
+              tail -50 /tmp/rcmdcheck.out
+              if grep -qE "^ERROR$|^ERROR " /tmp/rcmdcheck.out; then
+                echo "ERROR: R CMD check reported errors -- aborting release"
+                exit 1
+              fi
 
               echo ''
               echo 'Generated files:'

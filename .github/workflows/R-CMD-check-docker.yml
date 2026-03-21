@@ -5,7 +5,9 @@ on:
     branches: [main, master]
   pull_request:
 
-permissions: read-all
+permissions:
+  contents: read
+  packages: read
 
 jobs:
   determine-gdal-version:
@@ -104,7 +106,7 @@ jobs:
       - name: Run R CMD check
         run: |
           export LANG=en_US.UTF-8
-          Rscript -e "devtools::check(args = c('--no-manual'))"
+          R CMD check --no-manual --compact-vignettes=gs+qpdf gdalcli
 
       - name: Install package
         run: |
@@ -119,16 +121,16 @@ jobs:
           Rscript -e "
           library(gdalcli)
           cat('=== Arrow Support Report ===\n')
-          if (.gdal_has_feature('arrow_vectors')) {
+          if (gdalcli:::.gdal_has_feature('arrow_vectors')) {
             cat('✓ Arrow in-memory vector processing: AVAILABLE\n')
-            info <- .get_gdal_arrow_support_info()
+            info <- gdalcli:::.get_gdal_arrow_support_info()
             cat('  GDAL version compatible:', info\$gdal_version_compatible, '\n')
             cat('  Arrow package version:', info\$arrow_package_version, '\n')
             cat('  gdalraster version:', info\$gdalraster_version, '\n')
             cat('  Driver detected:', info\$driver_detected, '\n')
           } else {
             cat('✗ Arrow in-memory vector processing: NOT AVAILABLE\n')
-            info <- .get_gdal_arrow_support_info()
+            info <- gdalcli:::.get_gdal_arrow_support_info()
             cat('  GDAL version compatible:', info\$gdal_version_compatible, '\n')
             cat('  Arrow package available:', !is.null(info\$arrow_package_version), '\n')
             cat('  gdalraster available:', !is.null(info\$gdalraster_version), '\n')
@@ -136,16 +138,20 @@ jobs:
           }
           "
 
-      - name: Generate test summary
+      - name: Show test and examples output
         if: always()
         run: |
-          ROUT_DIR="gdalcli.Rcheck/tests"
-          if ls "$ROUT_DIR"/*.Rout 2>/dev/null | head -1 > /dev/null; then
-            for f in "$ROUT_DIR"/*.Rout; do
-              echo "=== $f ===" && tail -20 "$f"
-            done
-          else
-            echo "No .Rout test output files found"
+          if [ -f "gdalcli.Rcheck/tests/runtests.Rout.fail" ]; then
+            echo "=== Test Output (Failures) ==="
+            tail -100 "gdalcli.Rcheck/tests/runtests.Rout.fail"
+          elif [ -f "gdalcli.Rcheck/tests/runtests.Rout" ]; then
+            echo "=== Test Output ==="
+            tail -50 "gdalcli.Rcheck/tests/runtests.Rout"
+          fi
+
+          if [ -f "gdalcli.Rcheck/gdalcli-Ex.Rout" ]; then
+            echo "=== Examples Output ==="
+            tail -30 "gdalcli.Rcheck/gdalcli-Ex.Rout"
           fi
 
       - name: Upload check results
@@ -155,3 +161,4 @@ jobs:
           name: check-results-${{ matrix.r-version }}-gdal-${{ matrix.gdal-version }}
           path: gdalcli.Rcheck/
           retention-days: 7
+          if-no-files-found: ignore
