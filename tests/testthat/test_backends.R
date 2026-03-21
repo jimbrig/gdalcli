@@ -736,7 +736,7 @@ test_that("reticulate backend executes via gdalcli wrapper", {
 })
 
 # =============================================================================
-# COMPREHENSIVE EXECUTION TESTS (Both Backends)
+# EXECUTION TESTS w/ Both Backends
 # =============================================================================
 
 test_that("gdalraster backend produces text output from raster_info", {

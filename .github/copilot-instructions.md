@@ -55,9 +55,9 @@ The project uses GitHub Actions for automated testing, building, and deployment.
 ### Testing Workflows
 
 **R-CMD-check-ubuntu.yml**
-- **Purpose**: Comprehensive R CMD check on native Ubuntu/GitHub runners
+- **Purpose**: R CMD check on native Ubuntu/GitHub runners
 - **Trigger**: Push to main, pull requests
-- **Environment**: Ubuntu 22.04 with GDAL 3.11+ from ubuntugis PPA
+- **Environment**: Ubuntu latest with GDAL 3.11+ from ubuntugis PPA
 - **Coverage**: Full R CMD check including vignettes, tests, and gdalraster compatibility
 - **When to use**: Standard CI for all changes
 
@@ -252,7 +252,7 @@ job |> gdal_with_env(auth) |> gdal_run()
 
 ### Package Options
 
-The package provides a comprehensive options system via `gdalcli_options()` for controlling default behaviors.
+The package provides an options system via `gdalcli_options()` for controlling default behaviors.
 
 ```r
 # View current options

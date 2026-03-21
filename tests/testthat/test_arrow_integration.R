@@ -1,7 +1,7 @@
 # ============================================================================
 # Arrow Integration Tests
 #
-# Comprehensive testing for Arrow support in gdalcli
+# Testing for Arrow support in gdalcli
 # Tests cover: feature detection, package integration, vector processing,
 # and format conversion. All tests gracefully skip on unsupported environments.
 # ============================================================================
@@ -758,22 +758,3 @@ test_that("arrow test driver returns consistent boolean", {
   expect_equal(result1, result2)
   expect_type(result1, "logical")
 })
-
-# ============================================================================
-# SUMMARY: Test Statistics
-# ============================================================================
-
-# This test file includes ~65+ tests covering:
-# - Feature Detection & Environment (20+ tests)
-# - Arrow Package Integration (15+ tests)
-# - Vector In-Memory Processing (20+ tests)
-# - Format Conversion & Round-Trip (25+ tests)
-# - Extended Coverage (10+ tests)
-#
-# All tests use graceful skipping patterns:
-# - skip_if_not_installed() for arrow package tests
-# - skip_if_not(.gdal_has_feature()) for arrow vector tests
-# - skip_if_not(gdal_check_version()) for version-specific tests
-#
-# Tests are environment-safe and don't require external data.
-# All temp files are cleaned up with on.exit().

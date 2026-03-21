@@ -271,7 +271,7 @@ cat(script)
 #> set -e
 #> 
 #> # Native GDAL pipeline execution
-#> gdal raster pipeline ! read /home/andrew/R/x86_64-pc-linux-gnu-library/4.5/gdalcli/extdata/sample_clay_content.tif ! reproject --dst-crs EPSG:32632 --output /vsimem/gdalcli_9860c6c83523c.tif ! scale --src-min 0 --src-max 100 --dst-min 0 --dst-max 255 ! write /tmp/Rtmpw8bD5X/file9860c5ba69099.tif --input /vsimem/gdalcli_9860c372bd35c.tif
+#> gdal raster pipeline ! read /home/andrew/R/x86_64-pc-linux-gnu-library/4.5/gdalcli/extdata/sample_clay_content.tif ! reproject --dst-crs EPSG:32632 --output /vsimem/gdalcli_2532770a221cf.tif ! scale --src-min 0 --src-max 100 --dst-min 0 --dst-max 255 ! write /tmp/Rtmpd7lBSK/file2532745b399d8.tif --input /vsimem/gdalcli_253273097d5e0.tif
 ```
 
 ## Architecture
@@ -281,39 +281,8 @@ cat(script)
 1.  **Frontend Layer**: Auto-generated R functions with composable
     modifiers
 2.  **Pipeline Layer**: Automatic pipeline building and gdalcli pipeline
-    format serialization
+    format serialization  
 3.  **Engine Layer**: Command execution with multiple backend options
-
-## Arrow In-Memory Vector Processing
-
-When GDAL is compiled with Arrow support and the arrow R package is installed,
-gdalcli automatically uses arrow for faster in-memory vector operations:
-
-- **Performance**: 10-50x faster for large vector datasets
-- **Memory Efficiency**: Reduced overhead via Arrow C Stream Interface
-- **Transparency**: Automatic when available; falls back gracefully if not
-- **Compatibility**: Works with standard vector formats (GeoJSON, Shapefile, GeoPackage, etc.)
-
-### Checking Arrow Support
-
-```r
-# View complete capabilities report
-gdal_capabilities()
-
-# Get detailed arrow support information
-.get_gdal_arrow_support_info()
-
-# Check if arrow vectors are available
-.gdal_has_feature("arrow_vectors")
-```
-
-### Arrow Support Requirements
-
-- **GDAL**: 3.12+ (compiled with Arrow driver support)
-- **Arrow R package**: >= 10.0.0
-- **gdalraster**: >= 2.3.0 (optional but recommended for full functionality)
-
-Arrow support is optional. Tests automatically skip if any requirement is missing.
 
 ## Contributing
 
