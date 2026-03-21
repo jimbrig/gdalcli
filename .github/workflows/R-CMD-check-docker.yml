@@ -114,6 +114,28 @@ jobs:
         run: |
           Rscript -e "library(gdalcli); cat('gdalcli loaded successfully\n'); print(gdal_capabilities())"
 
+      - name: Report Arrow Support Status
+        run: |
+          Rscript -e "
+          library(gdalcli)
+          cat('=== Arrow Support Report ===\n')
+          if (.gdal_has_feature('arrow_vectors')) {
+            cat('✓ Arrow in-memory vector processing: AVAILABLE\n')
+            info <- .get_gdal_arrow_support_info()
+            cat('  GDAL version compatible:', info\$gdal_version_compatible, '\n')
+            cat('  Arrow package version:', info\$arrow_package_version, '\n')
+            cat('  gdalraster version:', info\$gdalraster_version, '\n')
+            cat('  Driver detected:', info\$driver_detected, '\n')
+          } else {
+            cat('✗ Arrow in-memory vector processing: NOT AVAILABLE\n')
+            info <- .get_gdal_arrow_support_info()
+            cat('  GDAL version compatible:', info\$gdal_version_compatible, '\n')
+            cat('  Arrow package available:', !is.null(info\$arrow_package_version), '\n')
+            cat('  gdalraster available:', !is.null(info\$gdalraster_version), '\n')
+            cat('  Driver detected:', info\$driver_detected, '\n')
+          }
+          "
+
       - name: Run package tests
         run: |
           Rscript -e "devtools::test()"

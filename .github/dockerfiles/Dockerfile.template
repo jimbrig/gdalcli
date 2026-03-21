@@ -124,6 +124,7 @@ RUN mkdir -p /tmp/gdal-build && cd /tmp/gdal-build && \
       -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
       -DCMAKE_C_COMPILER_LAUNCHER=ccache \
       -DBUILD_SHARED_LIBS=ON \
+      -DGDAL_USE_ARROW=ON \
       -DGDAL_USE_CURL=ON \
       -DGDAL_USE_NETCDF=ON \
       -DGDAL_USE_HDF5=ON \
@@ -146,7 +147,9 @@ RUN mkdir -p /tmp/gdal-build && cd /tmp/gdal-build && \
 # Verify GDAL installation
 RUN gdal --version && \
     which gdalinfo && \
-    gdalinfo --version
+    gdalinfo --version && \
+    echo "Checking Arrow driver support..." && \
+    (gdalinfo --formats 2>&1 | grep -i arrow && echo "Arrow driver found" || echo "Arrow driver not found")
 
 # ============================================================================
 # STAGE 2: System Base
@@ -256,7 +259,7 @@ WORKDIR /tmp/gdalcli
 RUN Rscript -e "install.packages(c('remotes', 'devtools', 'roxygen2'), repos='https://cran.rstudio.com/')"
 
 # Layer 2: Build-time dependencies (rarely change)
-RUN Rscript -e "install.packages(c('processx', 'yyjsonr', 'glue', 'httr'), repos='https://cran.rstudio.com/')"
+RUN Rscript -e "install.packages(c('processx', 'yyjsonr', 'glue', 'httr', 'arrow'), repos='https://cran.rstudio.com/')"
 
 # Layer 3: Package dependencies from DESCRIPTION (changes with updates)
 RUN Rscript -e "remotes::install_deps(dependencies = TRUE, repos='https://cran.rstudio.com/')"
