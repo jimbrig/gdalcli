@@ -126,7 +126,7 @@ test_that("arrow table has schema", {
   tbl <- arrow::arrow_table(df)
   schema <- arrow::schema(tbl)
 
-  expect_type(schema, "list")
+  expect_true(inherits(schema, c("Schema", "ArrowObject", "R6")))
   expect_true(length(schema) > 0)
 })
 

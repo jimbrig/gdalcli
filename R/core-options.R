@@ -111,7 +111,17 @@ gdalcli_options <- function(checkpoint = NULL,
                             backend = NULL,
                             verbose = NULL,
                             audit_logging = NULL,
-                            stream_out_format = NULL) {
+                            stream_out_format = NULL,
+                            ...) {
+  # Check for unknown arguments
+  dots <- list(...)
+  if (length(dots) > 0) {
+    unknown_arg <- names(dots)[1]
+    cli::cli_abort(
+      "Unknown option: {unknown_arg}. Valid options are: checkpoint, checkpoint_dir, backend, verbose, audit_logging, stream_out_format"
+    )
+  }
+
   # Store current options for return value
   current_opts <- .get_all_gdalcli_options()
 
