@@ -38,6 +38,7 @@
 #' @param audit_logging Logical. Log all job executions. Default: FALSE.
 #' @param stream_out_format Character. Default output streaming format:
 #'   NULL (no streaming), "text", "raw", "json", or "stdout". Default: NULL.
+#' @param ... Additional arguments (not allowed; raises error if provided).
 #'
 #' @return Invisibly returns a list of current gdalcli options (before modification).
 #'
