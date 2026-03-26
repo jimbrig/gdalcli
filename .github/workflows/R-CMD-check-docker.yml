@@ -103,6 +103,11 @@ jobs:
         run: |
           Rscript -e "roxygen2::roxygenise()"
 
+      - name: Clean build artifacts
+        run: |
+          rm -rf build/gdal_repo build/*.o build/*.so
+          ls -la build/ || echo "build/ directory removed"
+
       - name: Run R CMD check
         run: |
           export LANG=en_US.UTF-8
@@ -138,20 +143,37 @@ jobs:
           }
           "
 
-      - name: Show test and examples output
+      - name: Find and display check results
         if: always()
         run: |
-          if [ -f "gdalcli.Rcheck/tests/runtests.Rout.fail" ]; then
-            echo "=== Test Output (Failures) ==="
-            tail -100 "gdalcli.Rcheck/tests/runtests.Rout.fail"
-          elif [ -f "gdalcli.Rcheck/tests/runtests.Rout" ]; then
-            echo "=== Test Output ==="
-            tail -50 "gdalcli.Rcheck/tests/runtests.Rout"
-          fi
+          echo "=== Current working directory ==="
+          pwd
+          echo "=== Root directory contents ==="
+          ls -la | grep -i rcheck || echo "No .Rcheck directories found in root"
 
-          if [ -f "gdalcli.Rcheck/gdalcli-Ex.Rout" ]; then
-            echo "=== Examples Output ==="
-            tail -30 "gdalcli.Rcheck/gdalcli-Ex.Rout"
+          echo "=== Searching for .Rcheck directory ==="
+          RCHECK_DIR=$(find . -maxdepth 1 -name "*Rcheck" -type d | head -1)
+
+          if [ -z "$RCHECK_DIR" ]; then
+            echo "WARNING: No .Rcheck directory found!"
+            echo "Current directory: $(pwd)"
+            echo "Directory contents:"
+            ls -la
+          else
+            echo "Found check directory: $RCHECK_DIR"
+
+            if [ -f "$RCHECK_DIR/tests/runtests.Rout.fail" ]; then
+              echo "=== Test Output (Failures) ==="
+              tail -100 "$RCHECK_DIR/tests/runtests.Rout.fail"
+            elif [ -f "$RCHECK_DIR/tests/runtests.Rout" ]; then
+              echo "=== Test Output ==="
+              tail -50 "$RCHECK_DIR/tests/runtests.Rout"
+            fi
+
+            if [ -f "$RCHECK_DIR/gdalcli-Ex.Rout" ]; then
+              echo "=== Examples Output ==="
+              tail -30 "$RCHECK_DIR/gdalcli-Ex.Rout"
+            fi
           fi
 
       - name: Upload check results
@@ -159,6 +181,6 @@ jobs:
         if: always()
         with:
           name: check-results-${{ matrix.r-version }}-gdal-${{ matrix.gdal-version }}
-          path: gdalcli.Rcheck/
+          path: '*Rcheck/'
           retention-days: 7
-          if-no-files-found: ignore
+          if-no-files-found: warn
