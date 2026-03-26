@@ -117,7 +117,7 @@ jobs:
           export LANG=en_US.UTF-8
           cd ..
           R CMD check --no-manual *.tar.gz
-          mv gdalcli.Rcheck gdalcli/
+          mv gdalcli.Rcheck gdalcli/gdalcli.Rcheck
 
       - name: Install package
         run: |
