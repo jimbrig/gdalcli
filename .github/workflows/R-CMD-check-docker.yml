@@ -91,10 +91,6 @@ jobs:
           echo "=== R packages ===" 
           Rscript -e "sessionInfo()"
 
-      - name: Verify development dependencies
-        run: |
-          Rscript -e "if (!require('devtools', quietly=TRUE)) stop('devtools not installed in base image')"
-
       - name: Generate GDAL API
         run: |
           Rscript build/generate_gdal_api.R
@@ -121,7 +117,8 @@ jobs:
 
       - name: Install package
         run: |
-          Rscript -e "devtools::install()"
+          cd ..
+          R CMD INSTALL gdalcli
 
       - name: Verify package installation
         run: |
