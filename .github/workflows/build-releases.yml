@@ -34,6 +34,22 @@ on:
         options:
           - 'true'
           - 'false'
+  workflow_call:
+    inputs:
+      gdal_version:
+        description: 'GDAL version to build for (e.g., 3.11.4, 3.12.0)'
+        required: true
+        type: string
+      create_release:
+        description: 'Create GitHub release and tag? (only effective on main branch)'
+        required: true
+        default: 'true'
+        type: string
+      dry_run:
+        description: 'Dry run mode: skip branch/release creation and image push'
+        required: true
+        default: 'false'
+        type: string
 
 permissions:
   contents: write
