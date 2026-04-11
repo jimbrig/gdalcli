@@ -34,6 +34,22 @@ on:
         options:
           - 'true'
           - 'false'
+  workflow_call:
+    inputs:
+      gdal_version:
+        description: 'GDAL version to build for (e.g., 3.11.4, 3.12.0)'
+        required: true
+        type: string
+      create_release:
+        description: 'Create GitHub release and tag? (only effective on main branch)'
+        required: true
+        default: 'true'
+        type: string
+      dry_run:
+        description: 'Dry run mode: skip branch/release creation and image push'
+        required: true
+        default: 'false'
+        type: string
 
 permissions:
   contents: write
@@ -308,6 +324,13 @@ jobs:
             ls -la R/
             exit 1
           fi
+
+      - name: Clean build artifacts before commit
+        if: github.event.inputs.dry_run == 'false'
+        run: |
+          echo "Cleaning build artifacts..."
+          rm -rf .gdal_doc_cache_* build/gdal_repo build/*.o build/*.so
+          echo "Cleanup complete"
 
       - name: Update version info and commit release
         if: success() && github.event.inputs.dry_run == 'false'
