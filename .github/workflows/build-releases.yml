@@ -325,6 +325,13 @@ jobs:
             exit 1
           fi
 
+      - name: Clean build artifacts before commit
+        if: github.event.inputs.dry_run == 'false'
+        run: |
+          echo "Cleaning build artifacts..."
+          rm -rf .gdal_doc_cache_* build/gdal_repo build/*.o build/*.so
+          echo "Cleanup complete"
+
       - name: Update version info and commit release
         if: success() && github.event.inputs.dry_run == 'false'
         run: |
