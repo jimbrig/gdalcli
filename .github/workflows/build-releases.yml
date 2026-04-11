@@ -301,8 +301,13 @@ jobs:
                 }
               '
 
-              echo 'Running R CMD check...'
-              R CMD check --no-manual --compact-vignettes=gs+qpdf /workspace 2>&1 | tee /tmp/rcmdcheck.out
+              echo 'Building package tarball...'
+              cd /tmp
+              R CMD build --no-manual /workspace 2>&1 | tee /tmp/build.out
+
+              echo 'Running R CMD check on tarball...'
+              R CMD check --no-manual --compact-vignettes=gs+qpdf /tmp/gdalcli_*.tar.gz 2>&1 | tee /tmp/rcmdcheck.out
+              mv gdalcli.Rcheck /workspace/gdalcli.Rcheck
               tail -50 /tmp/rcmdcheck.out
               if grep -qE '^ERROR\$|^ERROR ' /tmp/rcmdcheck.out; then
                 echo "ERROR: R CMD check reported errors -- aborting release"
@@ -327,13 +332,6 @@ jobs:
             ls -la R/
             exit 1
           fi
-
-      - name: Clean build artifacts before commit
-        if: github.event.inputs.dry_run == 'false'
-        run: |
-          echo "Cleaning build artifacts..."
-          rm -rf .gdal_doc_cache_* build/gdal_repo build/*.o build/*.so
-          echo "Cleanup complete"
 
       - name: Update version info and commit release
         if: success() && github.event.inputs.dry_run == 'false'
