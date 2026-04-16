@@ -73,114 +73,13 @@ jobs:
     strategy:
       fail-fast: true
       max-parallel: 1
-    steps:
-      - name: Build each GDAL version sequentially
-        run: |
-          VERSIONS='${{ needs.parse-versions.outputs.versions }}'
-          CREATE_RELEASES='${{ github.event.inputs.create_releases }}'
-          DRY_RUN='${{ github.event.inputs.dry_run }}'
-
-          echo "Building ${{ needs.parse-versions.outputs.version-count }} release(s)..."
-          echo ""
-
-          # Use matrix context to iterate (workaround: we'll use a bash loop instead)
-          # For now, we need to call the workflow for each version
-
-          VERSIONS_ARRAY=$(echo "$VERSIONS" | jq -r '.[]')
-          VERSION_COUNT=$(echo "$VERSIONS_ARRAY" | wc -l)
-          CURRENT=0
-
-          while IFS= read -r VERSION; do
-            CURRENT=$((CURRENT + 1))
-            echo "=========================================="
-            echo "Building release $CURRENT/$VERSION_COUNT"
-            echo "GDAL Version: $VERSION"
-            echo "=========================================="
-
-            # Validate version format
-            if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              echo "ERROR: Invalid version format: $VERSION (expected X.Y.Z)"
-              exit 1
-            fi
-          done <<< "$VERSIONS_ARRAY"
-
-      - name: Trigger build-releases for each version
-        uses: actions/github-script@v9
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const versions = ${{ needs.parse-versions.outputs.versions }};
-            const createReleases = '${{ github.event.inputs.create_releases }}';
-            const dryRun = '${{ github.event.inputs.dry_run }}';
-
-            console.log(`Building ${versions.length} release(s) sequentially...`);
-
-            for (let i = 0; i < versions.length; i++) {
-              const version = versions[i];
-              console.log(`\n[${i + 1}/${versions.length}] Building GDAL ${version}...`);
-
-              try {
-                const response = await github.rest.actions.createWorkflowDispatch({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  workflow_id: 'build-releases.yml',
-                  ref: 'main',
-                  inputs: {
-                    gdal_version: version,
-                    create_release: createReleases,
-                    dry_run: dryRun
-                  }
-                });
-
-                console.log(`✓ Triggered build for GDAL ${version}`);
-
-                // Wait for the workflow to complete
-                // Poll the workflow runs to find our job
-                let completed = false;
-                let attempts = 0;
-                const maxAttempts = 120; // 10 minutes with 5 second intervals
-
-                while (!completed && attempts < maxAttempts) {
-                  await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
-
-                  const runs = await github.rest.actions.listWorkflowRuns({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    workflow_id: 'build-releases.yml',
-                    per_page: 10
-                  });
-
-                  // Find the run we just triggered (by matching version and recent time)
-                  const ourRun = runs.data.workflow_runs.find(run =>
-                    run.name === 'Build Release for GDAL Version' &&
-                    run.created_at > new Date(Date.now() - 2 * 60000).toISOString()
-                  );
-
-                  if (ourRun) {
-                    console.log(`Build status: ${ourRun.status} (${ourRun.conclusion})`);
-
-                    if (ourRun.status === 'completed') {
-                      completed = true;
-                      if (ourRun.conclusion !== 'success') {
-                        throw new Error(`Build for GDAL ${version} failed with status: ${ourRun.conclusion}`);
-                      }
-                    }
-                  }
-
-                  attempts++;
-                }
-
-                if (!completed) {
-                  throw new Error(`Build for GDAL ${version} timed out`);
-                }
-
-              } catch (error) {
-                console.error(`✗ Failed to build GDAL ${version}: ${error.message}`);
-                throw error;
-              }
-            }
-
-            console.log(`\n✓ All ${versions.length} release(s) built successfully!`);
+    matrix:
+      version: ${{ fromJson(needs.parse-versions.outputs.versions) }}
+    uses: ./.github/workflows/build-releases.yml
+    with:
+      gdal_version: ${{ matrix.version }}
+      create_release: ${{ github.event.inputs.create_releases }}
+      dry_run: ${{ github.event.inputs.dry_run }}
 
   batch-summary:
     needs: [parse-versions, build-releases]
