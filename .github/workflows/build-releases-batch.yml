@@ -73,8 +73,8 @@ jobs:
     strategy:
       fail-fast: true
       max-parallel: 1
-    matrix:
-      version: ${{ fromJson(needs.parse-versions.outputs.versions) }}
+      matrix:
+        version: ${{ fromJson(needs.parse-versions.outputs.versions) }}
     uses: ./.github/workflows/build-releases.yml
     with:
       gdal_version: ${{ matrix.version }}
