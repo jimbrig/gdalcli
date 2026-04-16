@@ -77,7 +77,8 @@ Edit metadata of a vector dataset.
 See \url{https://gdal.org/en/3.11.4/programs/gdal_vector_edit.html} for detailed GDAL documentation.
 }
 \examples{
-job <- gdal_vector_edit(input = "in.gpkg", output = "out.gpkg", overwrite = TRUE)
+job <- gdal_vector_edit(input = "in.gpkg", output = "out.gpkg", overwrite = TRUE, 
+    crs = "EPSG:4326", geometry_type = "POLYGONZM")
 \dontrun{
   result <- gdal_job_run(job)
 }

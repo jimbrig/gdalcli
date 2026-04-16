@@ -29,37 +29,37 @@ gdal_vector_geom_buffer(
 )
 }
 \arguments{
-\item{input}{Input vector datasets (Default: \code{NULL}) (required). Exactly \code{1} value(s). Can also be a \link{gdal_job} object to extend a pipeline}
+\item{input}{Input vector datasets (required). Exactly \code{1} value(s). Can also be a \link{gdal_job} object to extend a pipeline}
 
-\item{input_format}{Input formats (Character vector) (Default: \code{NULL}) (Advanced)}
+\item{input_format}{Input formats (Character vector) (Advanced)}
 
-\item{input_layer}{Input layer name(s) (Character vector) (Default: \code{NULL})}
+\item{input_layer}{Input layer name(s) (Character vector)}
 
 \item{output}{Output vector dataset (Dataset path) (required)}
 
-\item{output_format}{Output format ("GDALG" allowed) (Default: \code{NULL})}
+\item{output_format}{Output format ("GDALG" allowed)}
 
-\item{output_layer}{Output layer name (Default: \code{NULL})}
+\item{output_layer}{Output layer name}
 
-\item{distance}{Distance to which to extend the geometry. (Default: \code{NULL}) (required)}
+\item{distance}{Distance to which to extend the geometry. (required)}
 
-\item{open_option}{Open options (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL}) (Advanced)}
+\item{open_option}{Open options (Character vector). Format: \verb{<KEY>=<VALUE>} (Advanced)}
 
-\item{creation_option}{Creation option (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL})}
+\item{creation_option}{Creation option (Character vector). Format: \verb{<KEY>=<VALUE>}}
 
-\item{layer_creation_option}{Layer creation option (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL})}
+\item{layer_creation_option}{Layer creation option (Character vector). Format: \verb{<KEY>=<VALUE>}}
 
-\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{FALSE})}
+\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{false})}
 
-\item{update}{Whether to open existing dataset in update mode (Logical) (Default: \code{FALSE})}
+\item{update}{Whether to open existing dataset in update mode (Logical) (Default: \code{false})}
 
-\item{overwrite_layer}{Whether overwriting existing layer is allowed (Logical) (Default: \code{FALSE})}
+\item{overwrite_layer}{Whether overwriting existing layer is allowed (Logical) (Default: \code{false})}
 
-\item{append}{Whether appending to existing layer is allowed (Logical) (Default: \code{FALSE})}
+\item{append}{Whether appending to existing layer is allowed (Logical) (Default: \code{false})}
 
-\item{active_layer}{Set active layer (if not specified, all) (Default: \code{NULL})}
+\item{active_layer}{Set active layer (if not specified, all)}
 
-\item{active_geometry}{Geometry field name to which to restrict the processing (if not specified, all) (Default: \code{NULL})}
+\item{active_geometry}{Geometry field name to which to restrict the processing (if not specified, all)}
 
 \item{endcap_style}{Endcap style.. Choices: "round", "flat", "square" (Default: \code{round})}
 
@@ -80,7 +80,8 @@ Compute a buffer around geometries of a vector dataset.
 See \url{https://gdal.org/en/3.11.4/programs/gdal_vector_geom_buffer.html} for detailed GDAL documentation.
 }
 \examples{
-job <- gdal_vector_geom_buffer(input = "in.gpkg", output = "out.gpkg", overwrite = TRUE)
+job <- gdal_vector_geom_buffer(input = "in.gpkg", output = "out.gpkg", overwrite = TRUE, 
+    distance = 1000)
 \dontrun{
   result <- gdal_job_run(job)
 }

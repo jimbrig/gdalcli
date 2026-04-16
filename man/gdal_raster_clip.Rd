@@ -71,7 +71,8 @@ Clip a raster dataset.
 See \url{https://gdal.org/en/3.11.4/programs/gdal_raster_clip.html} for detailed GDAL documentation.
 }
 \examples{
-job <- gdal_raster_clip(input = "in.tif", output = "out.tif", overwrite = TRUE)
+job <- gdal_raster_clip(input = "in.tif", output = "out.tif", overwrite = TRUE, 
+    bbox = c(2, 49, 3, 50), bbox_crs = "EPSG:4326")
 \dontrun{
   result <- gdal_job_run(job)
 }

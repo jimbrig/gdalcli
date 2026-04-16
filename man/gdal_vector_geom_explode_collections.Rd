@@ -69,7 +69,7 @@ See \url{https://gdal.org/en/3.11.4/programs/gdal_vector_geom_explode-collection
 }
 \examples{
 job <- gdal_vector_geom_explode_collections(input = "in.gpkg", output = "points.shp", 
-    skip_on_type_mismatch = TRUE, overwrite = TRUE)
+    skip_on_type_mismatch = TRUE, overwrite = TRUE, geometry_type = "POINT")
 \dontrun{
   result <- gdal_job_run(job)
 }

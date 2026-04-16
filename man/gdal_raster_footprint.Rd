@@ -33,55 +33,55 @@ gdal_raster_footprint(
 )
 }
 \arguments{
-\item{input}{Input raster dataset (Dataset path) (Default: \code{NULL}) (required). Can also be a \link{gdal_job} object to extend a pipeline}
+\item{input}{Input raster dataset (Dataset path) (required). Can also be a \link{gdal_job} object to extend a pipeline}
 
-\item{input_format}{Input formats (Character vector) (Default: \code{NULL}) (Advanced)}
+\item{input_format}{Input formats (Character vector) (Advanced)}
 
 \item{output}{Output vector dataset (Dataset path) (required)}
 
-\item{output_format}{Output format (Default: \code{NULL})}
+\item{output_format}{Output format}
 
 \item{output_layer}{Output layer name (Default: \code{footprint})}
 
-\item{open_option}{Open options (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL}) (Advanced)}
+\item{open_option}{Open options (Character vector). Format: \verb{<KEY>=<VALUE>} (Advanced)}
 
-\item{creation_option}{Creation option (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL})}
+\item{creation_option}{Creation option (Character vector). Format: \verb{<KEY>=<VALUE>}}
 
-\item{layer_creation_option}{Layer creation option (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL})}
+\item{layer_creation_option}{Layer creation option (Character vector). Format: \verb{<KEY>=<VALUE>}}
 
-\item{append}{Whether to append to an existing dataset (Logical) (Default: \code{FALSE})}
+\item{append}{Whether to append to an existing dataset (Logical) (Default: \code{false})}
 
-\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{FALSE})}
+\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{false})}
 
-\item{band}{Input band(s) (1-based index) (Integer vector) (Default: \code{NULL})}
+\item{band}{Input band(s) (1-based index) (Integer vector)}
 
 \item{combine_bands}{Defines how the mask bands of the selected bands are combined to generate a single mask band, before being vectorized.. Choices: "union", "intersection" (Default: \code{union})}
 
-\item{overview}{Which overview level of source file must be used (Integer) (Default: \code{NULL}). Minimum: \code{0}}
+\item{overview}{Which overview level of source file must be used (Integer). Minimum: \code{0}}
 
-\item{src_nodata}{Set nodata values for input bands. (Default: \code{NULL}). \code{1} to \code{2147483647} value(s)}
+\item{src_nodata}{Set nodata values for input bands.. \code{1} to \code{2147483647} value(s)}
 
-\item{coordinate_system}{Target coordinate system. Choices: "georeferenced", "pixel" (Default: \code{NULL})}
+\item{coordinate_system}{Target coordinate system. Choices: "georeferenced", "pixel"}
 
-\item{dst_crs}{Destination CRS (Default: \code{NULL})}
+\item{dst_crs}{Destination CRS}
 
-\item{split_multipolygons}{Whether to split multipolygons as several features each with one single polygon (Logical) (Default: \code{NULL})}
+\item{split_multipolygons}{Whether to split multipolygons as several features each with one single polygon (Logical)}
 
-\item{convex_hull}{Whether to compute the convex hull of the footprint (Logical) (Default: \code{NULL})}
+\item{convex_hull}{Whether to compute the convex hull of the footprint (Logical)}
 
-\item{densify_distance}{Maximum distance between 2 consecutive points of the output geometry. (Default: \code{NULL}). Minimum: \code{0}}
+\item{densify_distance}{Maximum distance between 2 consecutive points of the output geometry.. Minimum: \code{0}}
 
-\item{simplify_tolerance}{Tolerance used to merge consecutive points of the output geometry. (Default: \code{NULL}). Minimum: \code{0}}
+\item{simplify_tolerance}{Tolerance used to merge consecutive points of the output geometry.. Minimum: \code{0}}
 
-\item{min_ring_area}{Minimum value for the area of a ring (Default: \code{NULL}). Minimum: \code{0}}
+\item{min_ring_area}{Minimum value for the area of a ring. Minimum: \code{0}}
 
 \item{max_points}{Maximum number of points of each output geometry (Default: \code{100})}
 
 \item{location_field}{Name of the field where the path of the input dataset will be stored. (Default: \code{location})}
 
-\item{no_location_field}{Disable creating a field with the path of the input dataset (Logical) (Default: \code{NULL})}
+\item{no_location_field}{Disable creating a field with the path of the input dataset (Logical)}
 
-\item{absolute_path}{Whether the path to the input dataset should be stored as an absolute path (Logical) (Default: \code{NULL})}
+\item{absolute_path}{Whether the path to the input dataset should be stored as an absolute path (Logical)}
 }
 \value{
 A \link{gdal_job} object.

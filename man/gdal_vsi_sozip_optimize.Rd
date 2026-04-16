@@ -15,11 +15,11 @@ gdal_vsi_sozip_optimize(
 )
 }
 \arguments{
-\item{input}{Input ZIP filename (Character vector) (Default: \code{NULL}) (required). \code{0} to \code{1} value(s). Can also be a \link{gdal_job} object to extend a pipeline}
+\item{input}{Input ZIP filename (Character vector) (required). \code{0} to \code{1} value(s). Can also be a \link{gdal_job} object to extend a pipeline}
 
-\item{output}{Output ZIP filename (Default: \code{NULL}) (required)}
+\item{output}{Output ZIP filename (required)}
 
-\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{FALSE})}
+\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{false})}
 
 \item{enable_sozip}{Whether to automatically/systematically/never apply the SOZIP optimization. Choices: "auto", "yes", "no" (Default: \code{auto})}
 
@@ -27,7 +27,7 @@ gdal_vsi_sozip_optimize(
 
 \item{sozip_min_file_size}{Minimum file size to decide if a file should be seek-optimized. Format: \verb{value in bytes or with K/M/G suffix} (Default: \verb{1 MB})}
 
-\item{stdout}{Directly output on stdout. If enabled, output-string will be empty (Logical) (Default: \code{NULL})}
+\item{stdout}{Directly output on stdout. If enabled, output-string will be empty (Logical)}
 }
 \value{
 A \link{gdal_job} object.

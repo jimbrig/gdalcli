@@ -19,27 +19,27 @@ gdal_raster_sieve(
 )
 }
 \arguments{
-\item{input}{Input raster dataset (Dataset path) (Default: \code{NULL}) (required). Can also be a \link{gdal_job} object to extend a pipeline}
+\item{input}{Input raster dataset (Dataset path) (required). Can also be a \link{gdal_job} object to extend a pipeline}
 
-\item{input_format}{Input formats (Character vector) (Default: \code{NULL}) (Advanced)}
+\item{input_format}{Input formats (Character vector) (Advanced)}
 
 \item{output}{Output raster dataset (Dataset path) (required)}
 
-\item{output_format}{Output format (Default: \code{NULL})}
+\item{output_format}{Output format}
 
-\item{open_option}{Open options (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL}) (Advanced)}
+\item{open_option}{Open options (Character vector). Format: \verb{<KEY>=<VALUE>} (Advanced)}
 
-\item{creation_option}{Creation option (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL})}
+\item{creation_option}{Creation option (Character vector). Format: \verb{<KEY>=<VALUE>}}
 
-\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{FALSE})}
+\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{false})}
 
-\item{mask}{Use the first band of the specified file as a validity mask (all pixels with a value other than zero will be considered suitable for inclusion in polygons) (Dataset path) (Default: \code{NULL})}
+\item{mask}{Use the first band of the specified file as a validity mask (all pixels with a value other than zero will be considered suitable for inclusion in polygons) (Dataset path)}
 
-\item{band}{Input band (1-based index) (Integer) (Default: \code{NULL})}
+\item{band}{Input band (1-based index) (Integer)}
 
 \item{size_threshold}{Minimum size of polygons to keep (Integer) (Default: \code{2})}
 
-\item{connect_diagonal_pixels}{Consider diagonal pixels as connected (Logical) (Default: \code{FALSE})}
+\item{connect_diagonal_pixels}{Consider diagonal pixels as connected (Logical) (Default: \code{false})}
 }
 \value{
 A \link{gdal_job} object.

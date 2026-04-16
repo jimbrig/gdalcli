@@ -18,15 +18,15 @@ gdal_vsi_sozip_create(
 )
 }
 \arguments{
-\item{input}{Input filenames (Character vector) (Default: \code{NULL}) (required). Can also be a \link{gdal_job} object to extend a pipeline}
+\item{input}{Input filenames (Character vector) (required). Can also be a \link{gdal_job} object to extend a pipeline}
 
-\item{output}{Output ZIP filename (Default: \code{NULL}) (required)}
+\item{output}{Output ZIP filename (required)}
 
-\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{FALSE})}
+\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{false})}
 
-\item{recursive}{Travels the directory structure of the specified directories recursively (Logical) (Default: \code{NULL})}
+\item{recursive}{Travels the directory structure of the specified directories recursively (Logical)}
 
-\item{no_paths}{Store just the name of a saved file, and do not store directory names (Logical) (Default: \code{NULL})}
+\item{no_paths}{Store just the name of a saved file, and do not store directory names (Logical)}
 
 \item{enable_sozip}{Whether to automatically/systematically/never apply the SOZIP optimization. Choices: "auto", "yes", "no" (Default: \code{auto})}
 
@@ -34,9 +34,9 @@ gdal_vsi_sozip_create(
 
 \item{sozip_min_file_size}{Minimum file size to decide if a file should be seek-optimized. Format: \verb{value in bytes or with K/M/G suffix} (Default: \verb{1 MB})}
 
-\item{content_type}{Store the Content-Type of the file being added. (Default: \code{NULL})}
+\item{content_type}{Store the Content-Type of the file being added.}
 
-\item{stdout}{Directly output on stdout. If enabled, output-string will be empty (Logical) (Default: \code{NULL})}
+\item{stdout}{Directly output on stdout. If enabled, output-string will be empty (Logical)}
 }
 \value{
 A \link{gdal_job} object.

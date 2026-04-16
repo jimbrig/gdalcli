@@ -44,7 +44,7 @@ Perform raster algebra
 See \url{https://gdal.org/en/3.11.4/programs/gdal_raster_calc.html} for detailed GDAL documentation.
 }
 \examples{
-job <- gdal_raster_calc()
+job <- gdal_raster_calc(calc = "A+B+C")
 \dontrun{
   result <- gdal_job_run(job)
 }

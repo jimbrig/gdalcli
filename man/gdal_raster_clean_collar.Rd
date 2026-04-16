@@ -22,21 +22,21 @@ gdal_raster_clean_collar(
 )
 }
 \arguments{
-\item{input}{Input raster dataset (Dataset path) (Default: \code{NULL}) (required). Can also be a \link{gdal_job} object to extend a pipeline}
+\item{input}{Input raster dataset (Dataset path) (required). Can also be a \link{gdal_job} object to extend a pipeline}
 
-\item{input_format}{Input formats (Character vector) (Default: \code{NULL}) (Advanced)}
+\item{input_format}{Input formats (Character vector) (Advanced)}
 
 \item{output}{Output raster dataset (Dataset path)}
 
-\item{output_format}{Output format (Default: \code{NULL})}
+\item{output_format}{Output format}
 
-\item{open_option}{Open options (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL}) (Advanced)}
+\item{open_option}{Open options (Character vector). Format: \verb{<KEY>=<VALUE>} (Advanced)}
 
-\item{creation_option}{Creation option (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL})}
+\item{creation_option}{Creation option (Character vector). Format: \verb{<KEY>=<VALUE>}}
 
-\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{FALSE})}
+\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{false})}
 
-\item{update}{Whether to open existing dataset in update mode (Logical) (Default: \code{FALSE})}
+\item{update}{Whether to open existing dataset in update mode (Logical) (Default: \code{false})}
 
 \item{color}{Transparent color(s): tuple of integer (like 'r,g,b'), 'black', 'white' (Character vector) (Default: \code{black})}
 
@@ -44,9 +44,9 @@ gdal_raster_clean_collar(
 
 \item{pixel_distance}{Number of consecutive transparent pixels that can be encountered before the giving up search inwards. (Integer) (Default: \code{2}). Minimum: \code{0}}
 
-\item{add_alpha}{Adds an alpha band to the output dataset. (Logical) (Default: \code{NULL})}
+\item{add_alpha}{Adds an alpha band to the output dataset. (Logical)}
 
-\item{add_mask}{Adds a mask band to the output dataset. (Logical) (Default: \code{NULL})}
+\item{add_mask}{Adds a mask band to the output dataset. (Logical)}
 
 \item{algorithm}{Algorithm to apply. Choices: "floodfill", "twopasses" (Default: \code{floodfill})}
 }
@@ -59,7 +59,7 @@ Clean the collar of a raster dataset, removing noise.
 See \url{https://gdal.org/en/3.11.4/programs/gdal_raster_clean-collar.html} for detailed GDAL documentation.
 }
 \examples{
-job <- gdal_raster_clean_collar()
+job <- gdal_raster_clean_collar(update = "my.tif")
 \dontrun{
   result <- gdal_job_run(job)
 }

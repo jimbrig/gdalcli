@@ -19,25 +19,25 @@ gdal_raster_color_map(
 )
 }
 \arguments{
-\item{input}{Input raster dataset (Dataset path) (Default: \code{NULL}) (required). Can also be a \link{gdal_job} object to extend a pipeline}
+\item{input}{Input raster dataset (Dataset path) (required). Can also be a \link{gdal_job} object to extend a pipeline}
 
-\item{input_format}{Input formats (Character vector) (Default: \code{NULL}) (Advanced)}
+\item{input_format}{Input formats (Character vector) (Advanced)}
 
 \item{output}{Output raster dataset (Dataset path) (required)}
 
-\item{output_format}{Output format ("GDALG" allowed) (Default: \code{NULL})}
+\item{output_format}{Output format ("GDALG" allowed)}
 
-\item{open_option}{Open options (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL}) (Advanced)}
+\item{open_option}{Open options (Character vector). Format: \verb{<KEY>=<VALUE>} (Advanced)}
 
-\item{creation_option}{Creation option (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL})}
+\item{creation_option}{Creation option (Character vector). Format: \verb{<KEY>=<VALUE>}}
 
-\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{FALSE})}
+\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{false})}
 
 \item{band}{Input band (1-based index) (Integer) (Default: \code{1})}
 
-\item{color_map}{Color map filename (Default: \code{NULL})}
+\item{color_map}{Color map filename}
 
-\item{add_alpha}{Adds an alpha mask band to the destination. (Logical) (Default: \code{NULL})}
+\item{add_alpha}{Adds an alpha mask band to the destination. (Logical)}
 
 \item{color_selection}{How to compute output colors from input values. Choices: "interpolate", "exact", "nearest" (Default: \code{interpolate})}
 }
@@ -50,7 +50,8 @@ Generate a RGB or RGBA dataset from a single band, using a color map
 See \url{https://gdal.org/en/3.11.4/programs/gdal_raster_color-map.html} for detailed GDAL documentation.
 }
 \examples{
-job <- gdal_raster_color_map(input = "n43.dt0", output = "out.tif", overwrite = TRUE)
+job <- gdal_raster_color_map(input = "n43.dt0", output = "out.tif", overwrite = TRUE, 
+    color_map = "color-map.txt")
 \dontrun{
   result <- gdal_job_run(job)
 }

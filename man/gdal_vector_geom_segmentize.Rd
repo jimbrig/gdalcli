@@ -66,7 +66,7 @@ See \url{https://gdal.org/en/3.11.4/programs/gdal_vector_geom_segmentize.html} f
 }
 \examples{
 job <- gdal_vector_geom_segmentize(input = "in.gpkg", output = "out.gpkg", 
-    overwrite = TRUE)
+    overwrite = TRUE, max_length = 1000)
 \dontrun{
   result <- gdal_job_run(job)
 }

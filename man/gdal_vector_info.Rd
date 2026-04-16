@@ -50,7 +50,7 @@ Return information on a vector dataset.
 See \url{https://gdal.org/en/3.11.4/programs/gdal_vector_info.html} for detailed GDAL documentation.
 }
 \examples{
-job <- gdal_vector_info(output_format = "text")
+job <- gdal_vector_info(output_format = "text", features = "poly.gpkg")
 \dontrun{
   result <- gdal_job_run(job)
 }

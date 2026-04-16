@@ -34,47 +34,47 @@ gdal_vector_grid_maximum(
 )
 }
 \arguments{
-\item{input}{Input vector dataset (Dataset path) (Default: \code{NULL}) (required). Can also be a \link{gdal_job} object to extend a pipeline}
+\item{input}{Input vector dataset (Dataset path) (required). Can also be a \link{gdal_job} object to extend a pipeline}
 
-\item{input_format}{Input formats (Character vector) (Default: \code{NULL}) (Advanced)}
+\item{input_format}{Input formats (Character vector) (Advanced)}
 
 \item{output}{Output raster dataset (Dataset path) (required)}
 
-\item{output_format}{Output format (Default: \code{NULL})}
+\item{output_format}{Output format}
 
 \item{output_data_type}{Output data type. Choices: "Byte", "Int8", "UInt16", "Int16", "UInt32", ... (Default: \code{Float64})}
 
-\item{open_option}{Open options (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL}) (Advanced)}
+\item{open_option}{Open options (Character vector). Format: \verb{<KEY>=<VALUE>} (Advanced)}
 
-\item{creation_option}{Creation option (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL})}
+\item{creation_option}{Creation option (Character vector). Format: \verb{<KEY>=<VALUE>}}
 
-\item{extent}{Set the target georeferenced extent. Format: \verb{<xmin>,<ymin>,<xmax>,<ymax>} (Default: \code{NULL}). Exactly \code{4} value(s)}
+\item{extent}{Set the target georeferenced extent. Format: \verb{<xmin>,<ymin>,<xmax>,<ymax>}. Exactly \code{4} value(s)}
 
-\item{resolution}{Set the target resolution. Format: \verb{<xres>,<yres>} (Default: \code{NULL}). Exactly \code{2} value(s)}
+\item{resolution}{Set the target resolution. Format: \verb{<xres>,<yres>}. Exactly \code{2} value(s)}
 
-\item{size}{Set the target size in pixels and lines (Integer vector). Format: \verb{<xsize>,<ysize>} (Default: \code{NULL}). Exactly \code{2} value(s)}
+\item{size}{Set the target size in pixels and lines (Integer vector). Format: \verb{<xsize>,<ysize>}. Exactly \code{2} value(s)}
 
-\item{crs}{Override the projection for the output file (Default: \code{NULL})}
+\item{crs}{Override the projection for the output file}
 
-\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{FALSE})}
+\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{false})}
 
-\item{layer}{Layer name (Character vector) (Default: \code{NULL})}
+\item{layer}{Layer name (Character vector)}
 
-\item{sql}{SQL statement. Format: \verb{<statement>|@<filename>} (Default: \code{NULL})}
+\item{sql}{SQL statement. Format: \verb{<statement>|@<filename>}}
 
-\item{bbox}{Select only points contained within the specified bounding box (Default: \code{NULL}). Exactly \code{4} value(s)}
+\item{bbox}{Select only points contained within the specified bounding box. Exactly \code{4} value(s)}
 
-\item{zfield}{Field name from which to get Z values. (Default: \code{NULL})}
+\item{zfield}{Field name from which to get Z values.}
 
 \item{zoffset}{Value to add to the Z field value (applied before zmultiply) (Default: \code{0})}
 
 \item{zmultiply}{Multiplication factor for the Z field value (applied after zoffset) (Default: \code{1})}
 
-\item{radius}{Radius of the search circle (Default: \code{NULL})}
+\item{radius}{Radius of the search circle}
 
-\item{radius1}{First axis of the search ellipse (Default: \code{NULL})}
+\item{radius1}{First axis of the search ellipse}
 
-\item{radius2}{Second axis of the search ellipse (Default: \code{NULL})}
+\item{radius2}{Second axis of the search ellipse}
 
 \item{angle}{Angle of search ellipse rotation in degrees (counter clockwise) (Default: \code{0})}
 

@@ -37,63 +37,63 @@ gdal_vector_rasterize(
 )
 }
 \arguments{
-\item{input}{Input vector dataset (Dataset path) (Default: \code{NULL}) (required). Can also be a \link{gdal_job} object to extend a pipeline}
+\item{input}{Input vector dataset (Dataset path) (required). Can also be a \link{gdal_job} object to extend a pipeline}
 
-\item{input_format}{Input formats (Character vector) (Default: \code{NULL}) (Advanced)}
+\item{input_format}{Input formats (Character vector) (Advanced)}
 
 \item{output}{Output raster dataset (Dataset path) (required)}
 
-\item{output_format}{Output format (Default: \code{NULL})}
+\item{output_format}{Output format}
 
-\item{target_aligned_pixels}{(target aligned pixels) Align the coordinates of the extent of the output file to the values of the resolution (Logical) (Default: \code{NULL})}
+\item{target_aligned_pixels}{(target aligned pixels) Align the coordinates of the extent of the output file to the values of the resolution (Logical)}
 
-\item{output_data_type}{Output data type. Choices: "Byte", "Int8", "UInt16", "Int16", "UInt32", ... (Default: \code{NULL})}
+\item{output_data_type}{Output data type. Choices: "Byte", "Int8", "UInt16", "Int16", "UInt32", ...}
 
-\item{open_option}{Open options (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL}) (Advanced)}
+\item{open_option}{Open options (Character vector). Format: \verb{<KEY>=<VALUE>} (Advanced)}
 
-\item{creation_option}{Creation option (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL})}
+\item{creation_option}{Creation option (Character vector). Format: \verb{<KEY>=<VALUE>}}
 
-\item{band}{The band(s) to burn values into (1-based index) (Integer vector) (Default: \code{NULL})}
+\item{band}{The band(s) to burn values into (1-based index) (Integer vector)}
 
-\item{invert}{Invert the rasterization (Logical) (Default: \code{FALSE})}
+\item{invert}{Invert the rasterization (Logical) (Default: \code{false})}
 
-\item{all_touched}{Enables the ALL_TOUCHED rasterization option (Logical) (Default: \code{NULL})}
+\item{all_touched}{Enables the ALL_TOUCHED rasterization option (Logical)}
 
-\item{burn}{Burn value (Default: \code{NULL})}
+\item{burn}{Burn value}
 
-\item{attribute_name}{Attribute name (Default: \code{NULL})}
+\item{attribute_name}{Attribute name}
 
-\item{X3d}{Indicates that a burn value should be extracted from the Z values of the feature (Logical) (Default: \code{NULL})}
+\item{X3d}{Indicates that a burn value should be extracted from the Z values of the feature (Logical)}
 
-\item{add}{Add to existing raster (Logical) (Default: \code{FALSE})}
+\item{add}{Add to existing raster (Logical) (Default: \code{false})}
 
-\item{layer_name}{Layer name (Default: \code{NULL})}
+\item{layer_name}{Layer name}
 
-\item{where}{SQL where clause (Default: \code{NULL})}
+\item{where}{SQL where clause}
 
-\item{sql}{SQL select statement (Default: \code{NULL})}
+\item{sql}{SQL select statement}
 
-\item{dialect}{SQL dialect (Default: \code{NULL})}
+\item{dialect}{SQL dialect}
 
-\item{nodata}{Assign a specified nodata value to output bands (Default: \code{NULL})}
+\item{nodata}{Assign a specified nodata value to output bands}
 
-\item{init}{Pre-initialize output bands with specified value (Default: \code{NULL})}
+\item{init}{Pre-initialize output bands with specified value}
 
-\item{crs}{Override the projection for the output file (Default: \code{NULL})}
+\item{crs}{Override the projection for the output file}
 
-\item{transformer_option}{Set a transformer option suitable to pass to GDALCreateGenImgProjTransformer2 (Character vector). Format: \verb{<NAME>=<VALUE>} (Default: \code{NULL})}
+\item{transformer_option}{Set a transformer option suitable to pass to GDALCreateGenImgProjTransformer2 (Character vector). Format: \verb{<NAME>=<VALUE>}}
 
-\item{extent}{Set the target georeferenced extent. Format: \verb{<xmin>,<ymin>,<xmax>,<ymax>} (Default: \code{NULL}). Exactly \code{4} value(s)}
+\item{extent}{Set the target georeferenced extent. Format: \verb{<xmin>,<ymin>,<xmax>,<ymax>}. Exactly \code{4} value(s)}
 
-\item{resolution}{Set the target resolution. Format: \verb{<xres>,<yres>} (Default: \code{NULL}). Exactly \code{2} value(s)}
+\item{resolution}{Set the target resolution. Format: \verb{<xres>,<yres>}. Exactly \code{2} value(s)}
 
-\item{size}{Set the target size in pixels and lines (Integer vector). Format: \verb{<xsize>,<ysize>} (Default: \code{NULL}). Exactly \code{2} value(s)}
+\item{size}{Set the target size in pixels and lines (Integer vector). Format: \verb{<xsize>,<ysize>}. Exactly \code{2} value(s)}
 
 \item{optimization}{Force the algorithm used (results are identical). Choices: "AUTO", "RASTER", "VECTOR" (Default: \code{AUTO})}
 
-\item{update}{Whether to open existing dataset in update mode (Logical) (Default: \code{FALSE})}
+\item{update}{Whether to open existing dataset in update mode (Logical) (Default: \code{false})}
 
-\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{FALSE})}
+\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{false})}
 }
 \value{
 A \link{gdal_job} object.

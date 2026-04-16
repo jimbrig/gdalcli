@@ -20,19 +20,19 @@ gdal_raster_aspect(
 )
 }
 \arguments{
-\item{input}{Input raster dataset (Dataset path) (Default: \code{NULL}) (required). Can also be a \link{gdal_job} object to extend a pipeline}
+\item{input}{Input raster dataset (Dataset path) (required). Can also be a \link{gdal_job} object to extend a pipeline}
 
-\item{input_format}{Input formats (Character vector) (Default: \code{NULL}) (Advanced)}
+\item{input_format}{Input formats (Character vector) (Advanced)}
 
 \item{output}{Output raster dataset (Dataset path) (required)}
 
-\item{output_format}{Output format ("GDALG" allowed) (Default: \code{NULL})}
+\item{output_format}{Output format ("GDALG" allowed)}
 
-\item{open_option}{Open options (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL}) (Advanced)}
+\item{open_option}{Open options (Character vector). Format: \verb{<KEY>=<VALUE>} (Advanced)}
 
-\item{creation_option}{Creation option (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL})}
+\item{creation_option}{Creation option (Character vector). Format: \verb{<KEY>=<VALUE>}}
 
-\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{FALSE})}
+\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{false})}
 
 \item{band}{Input band (1-based index) (Integer) (Default: \code{1})}
 
@@ -40,9 +40,9 @@ gdal_raster_aspect(
 
 \item{gradient_alg}{Algorithm used to compute terrain gradient. Choices: "Horn", "ZevenbergenThorne" (Default: \code{Horn})}
 
-\item{zero_for_flat}{Whether to output zero for flat areas (Logical) (Default: \code{NULL})}
+\item{zero_for_flat}{Whether to output zero for flat areas (Logical)}
 
-\item{no_edges}{Do not try to interpolate values at dataset edges or close to nodata values (Logical) (Default: \code{NULL})}
+\item{no_edges}{Do not try to interpolate values at dataset edges or close to nodata values (Logical)}
 }
 \value{
 A \link{gdal_job} object.

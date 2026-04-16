@@ -27,43 +27,43 @@ gdal_vector_concat(
 )
 }
 \arguments{
-\item{input}{Input vector datasets (Default: \code{NULL}) (required). \code{1} to \code{2147483647} value(s). Can also be a \link{gdal_job} object to extend a pipeline}
+\item{input}{Input vector datasets (required). \code{1} to \code{2147483647} value(s). Can also be a \link{gdal_job} object to extend a pipeline}
 
-\item{input_format}{Input formats (Character vector) (Default: \code{NULL}) (Advanced)}
+\item{input_format}{Input formats (Character vector) (Advanced)}
 
-\item{input_layer}{Input layer name(s) (Character vector) (Default: \code{NULL})}
+\item{input_layer}{Input layer name(s) (Character vector)}
 
-\item{source_layer_field_name}{Name of the new field to add to contain identificoncation of the source layer, with value determined from 'source-layer-field-content' (Default: \code{NULL})}
+\item{source_layer_field_name}{Name of the new field to add to contain identificoncation of the source layer, with value determined from 'source-layer-field-content'}
 
-\item{source_layer_field_content}{A string, possibly using \{AUTO_NAME\}, \{DS_NAME\}, \{DS_BASENAME\}, \{DS_INDEX\}, \{LAYER_NAME\}, \{LAYER_INDEX\} (Default: \code{NULL})}
+\item{source_layer_field_content}{A string, possibly using \{AUTO_NAME\}, \{DS_NAME\}, \{DS_BASENAME\}, \{DS_INDEX\}, \{LAYER_NAME\}, \{LAYER_INDEX\}}
 
 \item{output}{Output vector dataset (Dataset path) (required)}
 
-\item{output_format}{Output format ("GDALG" allowed) (Default: \code{NULL})}
+\item{output_format}{Output format ("GDALG" allowed)}
 
-\item{output_layer}{Name of the output vector layer (single mode), or template to name the output vector layers (stack mode) (Default: \code{NULL})}
+\item{output_layer}{Name of the output vector layer (single mode), or template to name the output vector layers (stack mode)}
 
-\item{open_option}{Open options (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL}) (Advanced)}
+\item{open_option}{Open options (Character vector). Format: \verb{<KEY>=<VALUE>} (Advanced)}
 
-\item{creation_option}{Creation option (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL})}
+\item{creation_option}{Creation option (Character vector). Format: \verb{<KEY>=<VALUE>}}
 
-\item{layer_creation_option}{Layer creation option (Character vector). Format: \verb{<KEY>=<VALUE>} (Default: \code{NULL})}
+\item{layer_creation_option}{Layer creation option (Character vector). Format: \verb{<KEY>=<VALUE>}}
 
-\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{FALSE})}
+\item{overwrite}{Whether overwriting existing output is allowed (Logical) (Default: \code{false})}
 
-\item{update}{Whether to open existing dataset in update mode (Logical) (Default: \code{FALSE})}
+\item{update}{Whether to open existing dataset in update mode (Logical) (Default: \code{false})}
 
-\item{overwrite_layer}{Whether overwriting existing layer is allowed (Logical) (Default: \code{FALSE})}
+\item{overwrite_layer}{Whether overwriting existing layer is allowed (Logical) (Default: \code{false})}
 
-\item{append}{Whether appending to existing layer is allowed (Logical) (Default: \code{FALSE})}
+\item{append}{Whether appending to existing layer is allowed (Logical) (Default: \code{false})}
 
 \item{mode}{Determine the strategy to create output layers from source layers . Choices: "merge-per-layer-name", "stack", "single" (Default: \code{merge-per-layer-name})}
 
 \item{field_strategy}{How to determine target fields from source fields. Choices: "union", "intersection" (Default: \code{union})}
 
-\item{src_crs}{Source CRS (Default: \code{NULL})}
+\item{src_crs}{Source CRS}
 
-\item{dst_crs}{Destination CRS (Default: \code{NULL})}
+\item{dst_crs}{Destination CRS}
 }
 \value{
 A \link{gdal_job} object.
