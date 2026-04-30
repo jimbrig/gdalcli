@@ -46,7 +46,7 @@
 #' @return
 #' Depends on the streaming configuration:
 #' - If `stream_out_format = NULL` (default): Invisibly returns `TRUE` on success.
-#'   Raises an R .error if the GDAL process fails.
+#'   Raises an R error if the GDAL process fails.
 #' - If `stream_out_format = "text"`: Returns the stdout as a character string.
 #' - If `stream_out_format = "raw"`: Returns the stdout as a raw vector.
 #' - If `stream_out_format = "json"`: Parses stdout as JSON and returns the result.

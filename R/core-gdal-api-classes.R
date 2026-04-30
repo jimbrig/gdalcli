@@ -169,7 +169,7 @@ print.GdalApi <- function(x, ...) {
         "Dynamic GDAL API built successfully (GDAL {api_env$gdal_version})"
       )
     },
-    .error = function(e) {
+    error = function(e) {
       cli::cli_abort(
         c(
           "Failed to build dynamic API structure",
@@ -198,7 +198,7 @@ print.GdalApi <- function(x, ...) {
         "Dynamic GDAL API loaded from cache (GDAL {api_env$gdal_version})"
       )
     },
-    .error = function(e) {
+    error = function(e) {
       cli::cli_warn("Cache load failed, rebuilding...")
       .build_api_structure(api_env)
       .save_to_cache(api_env)
@@ -229,7 +229,7 @@ print.GdalApi <- function(x, ...) {
 
       cli::cli_inform("API structure cached to {.file {api_env$cache_file}}")
     },
-    .error = function(e) {
+    error = function(e) {
       cli::cli_warn("Failed to save cache: {conditionMessage(e)}")
     }
   )
@@ -277,7 +277,7 @@ GdalApiSub <- function(group_name, command_list) {
         # Store directly in the environment
         sub_env[[cmd_name]] <- func
       },
-      .error = function(e) {
+      error = function(e) {
         cli::cli_warn("Failed to create function for {paste(cmd_path, collapse=' ')}: {conditionMessage(e)}")
       }
     )

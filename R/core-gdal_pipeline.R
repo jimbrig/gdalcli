@@ -442,7 +442,7 @@ gdal_job_run.gdal_pipeline <- function(x,
     # Execute the job
     tryCatch({
       gdal_job_run(job, ..., backend = backend, verbose = verbose)
-    }, .error = function(e) {
+    }, error = function(e) {
       cli::cli_abort(
         c(
           sprintf("Pipeline failed at job %d", i),
@@ -594,7 +594,7 @@ gdal_job_run.gdal_pipeline <- function(x,
         # Try to parse as JSON
         tryCatch({
           return(yyjsonr::read_json_str(result$stdout))
-        }, .error = function(e) {
+        }, error = function(e) {
           cli::cli_warn(
             c(
               "Failed to parse output as JSON",
@@ -608,7 +608,7 @@ gdal_job_run.gdal_pipeline <- function(x,
     }
 
     invisible(TRUE)
-  }, .error = function(e) {
+  }, error = function(e) {
     cli::cli_abort(
       c(
         "Native GDAL pipeline execution failed",

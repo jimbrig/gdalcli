@@ -53,7 +53,7 @@
   # Try to get gdalraster version
   current_version <- tryCatch({
     packageVersion("gdalraster")
-  }, .error = function(e) {
+  }, error = function(e) {
     if (!quietly) {
       cli::cli_warn("Could not determine gdalraster version: {e$message}")
     }
@@ -123,7 +123,7 @@
 
   tryCatch({
     as.character(packageVersion("gdalraster"))
-  }, .error = function(e) NULL)
+  }, error = function(e) NULL)
 }
 
 
