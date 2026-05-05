@@ -16,8 +16,10 @@ Description: An auto-generated R wrapper for the GDAL CLI
     provided as an alternative interface to GDAL and OGR command line utilities. The project
     reserves the right to modify, rename, reorganize, and change the behavior of the utility 
     until it is frozen in a future feature release of GDAL. Use tagged versions of the package
-    to pin a specific version of the GDAL CLI.
-License: MIT + file LICENSE
+    to pin a specific version of the GDAL CLI. This package includes auto-generated wrapper
+    functions and documentation from GDAL (Copyright 1998-2026 Frank Warmerdam, Even Rouault,
+    and others). See COPYRIGHTS file for details.
+License: MIT + file LICENSE + file COPYRIGHTS
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
